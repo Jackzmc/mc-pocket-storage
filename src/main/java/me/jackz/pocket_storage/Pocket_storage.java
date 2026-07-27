@@ -1,25 +1,16 @@
 package me.jackz.pocket_storage;
 
 import com.mojang.logging.LogUtils;
-import me.jackz.pocket_storage.blocks.PocketChestBlock;
-import me.jackz.pocket_storage.blocks.PocketChestBlockEntity;
-import me.jackz.pocket_storage.registry.BlockEntities;
+import me.jackz.pocket_storage.registry.RegistryBlockEntities;
+import me.jackz.pocket_storage.registry.RegistryBlocks;
+import me.jackz.pocket_storage.registry.RegistryItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.MapColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -41,32 +32,24 @@ import org.slf4j.Logger;
 
 import java.util.function.Supplier;
 
-import static me.jackz.pocket_storage.registry.Blocks.POCKET_CHEST;
-
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(Pocket_storage.MODID)
 public class Pocket_storage {
-    // Define mod id in a common place for everything to reference
     public static final String MODID = "pocket_storage";
-    // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
-    // Create a Deferred Register to hold Items which will all be registered under the "pocket_storage" namespace
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
+
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "pocket_storage" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
-    // Creates a new BlockItem with the id "pocket_storage:example_block", combining the namespace and path
-    public static final DeferredItem<BlockItem> POCKET_CHEST_ITEM = ITEMS.registerSimpleBlockItem("pocket_chest", POCKET_CHEST);
-
-//    public static final DeferredDim
-
-    // Creates a new food item with the id "pocket_storage:example_id", nutrition 1 and saturation 2
-    public static final DeferredItem<Item> POCKET_TOOL = ITEMS.registerSimpleItem("pocket_tool", new Item.Properties().food(new FoodProperties.Builder().alwaysEdible().nutrition(1).saturationModifier(2f).build()));
-
     // Creates a creative tab with the id "pocket_storage:example_tab" for the example item, that is placed after the combat tab
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = CREATIVE_MODE_TABS.register("pocket_storage", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.pocket_storage")).withTabsBefore(CreativeModeTabs.COMBAT).icon(() -> POCKET_TOOL.get().getDefaultInstance()).displayItems((parameters, output) -> {
-        output.accept(POCKET_TOOL.get());
-        output.accept(POCKET_CHEST_ITEM.get());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATIVE_TAB = CREATIVE_MODE_TABS.register("pocket_storage",
+        () -> CreativeModeTab.builder()
+                .title(Component.translatable("itemGroup.pocket_storage"))
+                .withTabsBefore(CreativeModeTabs.COMBAT)
+                .icon(() -> RegistryItems.POCKET_CHEST_ITEM.get().getDefaultInstance())
+                .displayItems((parameters, output) -> {
+        output.accept(RegistryItems.POCKET_CHEST_ITEM.get());
+        output.accept(RegistryItems.POCKET_TOOL.get());
     }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
@@ -75,21 +58,17 @@ public class Pocket_storage {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
 
-        // Register the Deferred Register to the mod event bus so items get registered
-        ITEMS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
 
-        me.jackz.pocket_storage.registry.Blocks.register(modEventBus);
-        me.jackz.pocket_storage.registry.BlockEntities.register(modEventBus);
+        RegistryItems.register(modEventBus);
+        RegistryBlocks.register(modEventBus);
+        RegistryBlockEntities.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Pocket_storage) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
-
-        // Register the item to a creative tab
-        modEventBus.addListener(this::addCreative);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -104,11 +83,6 @@ public class Pocket_storage {
         LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
 
         Config.items.forEach((item) -> LOGGER.info("ITEM >> {}", item.toString()));
-    }
-
-    // Add the example block item to the building blocks tab
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) event.accept(POCKET_CHEST_ITEM);
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
