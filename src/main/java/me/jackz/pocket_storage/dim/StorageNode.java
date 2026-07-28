@@ -8,6 +8,7 @@ import me.jackz.pocket_storage.util.LevelLocationAttachment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -59,6 +60,8 @@ public class StorageNode {
 
         Vec3 pos = findSafeSpawn(player);
         StorageDimTransition.enterStorageDimension(player, pos);
+
+        player.sendSystemMessage(Component.literal("Sneak near the center to exit"));
     }
 
     public Vec3 findSafeSpawn(ServerPlayer player) {

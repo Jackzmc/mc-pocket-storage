@@ -1,37 +1,7 @@
 {
-	"format_version": "1.9.0",
-	"credit": "Made with Blockbench",
 	"parent": "minecraft:item/handheld",
 	"textures": {
 		"rod": "minecraft:item/stick",
 		"cube": "minecraft:block/obsidian"
-	},
-	"elements": [
-		{
-			"from": [0, 0, 0],
-			"to": [16, 2, 16],
-			"rotation": {"angle": 0, "axis": "y", "origin": [0, 0, 16]},
-			"faces": {
-				"north": {"uv": [0, 0, 16, 2], "texture": "#rod"},
-				"east": {"uv": [0, 0, 16, 2], "texture": "#rod"},
-				"south": {"uv": [0, 0, 16, 2], "texture": "#rod"},
-				"west": {"uv": [0, 0, 16, 2], "texture": "#rod"},
-				"up": {"uv": [0, 0, 16, 16], "rotation": 270, "texture": "#rod"},
-				"down": {"uv": [0, 0, 16, 16], "rotation": 90, "texture": "#rod"}
-			}
-		},
-		{
-			"from": [13, 0, 12],
-			"to": [16, 3, 15],
-			"rotation": {"angle": 0, "axis": "y", "origin": [13, 0, 12]},
-			"faces": {
-				"north": {"uv": [0, 0, 3, 3], "texture": "#cube"},
-				"east": {"uv": [0, 0, 3, 3], "texture": "#cube"},
-				"south": {"uv": [0, 0, 3, 3], "texture": "#cube"},
-				"west": {"uv": [0, 0, 3, 3], "texture": "#cube"},
-				"up": {"uv": [0, 0, 3, 3], "texture": "#cube"},
-				"down": {"uv": [0, 0, 3, 3], "texture": "#cube"}
-			}
-		}
-	]
+	}
 }

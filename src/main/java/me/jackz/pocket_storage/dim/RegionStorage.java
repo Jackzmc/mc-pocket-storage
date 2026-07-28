@@ -15,15 +15,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class RegionStorage extends SavedData {
     public static final int DISTANCE_BETWEEN = 100;
     public static final int[] SIZE = { 20, 20, 20 };
 
     private Map<UUID, StorageNodeData> nodesDataMap = new HashMap<>();
+    private Map<UUID, Set<UUID>> playerNodesMap = new HashMap<>();
 
     private BlockPos nextPos;
 
@@ -52,6 +51,11 @@ public class RegionStorage extends SavedData {
             BlockPos pos = BlockPos.of(entry.getLong("origin"));
             StorageNodeData nodeData = new StorageNodeData(ownerUUID, pos);
             storage.nodesDataMap.put(id, nodeData);
+            if(!storage.playerNodesMap.containsKey(ownerUUID)) {
+                storage.playerNodesMap.put(ownerUUID, new HashSet<>());
+            }
+            Set<UUID> nodeList = storage.playerNodesMap.get(ownerUUID);
+            nodeList.add(id);
         }
         storage.nextPos = BlockPos.of(tag.getLong("next_pos"));
         return storage;
@@ -68,6 +72,22 @@ public class RegionStorage extends SavedData {
             list.add(entry);
         }
         tag.put("regions", list);
+        ListTag playerList = new ListTag();
+        for (Map.Entry<UUID, Set<UUID>> e : playerNodesMap.entrySet()) {
+            CompoundTag entry = new CompoundTag();
+
+            ListTag nodeList = new ListTag();
+            for(UUID uuid : e.getValue()) {
+                CompoundTag node = new CompoundTag();
+                node.putUUID("id", uuid);
+            }
+
+            entry.putUUID("ownerUUID", e.getKey());
+            entry.put("nodeIds", nodeList);
+
+            list.add(entry);
+        }
+        tag.put("player_owned_regions", playerList);
         tag.putLong("next_pos", nextPos.asLong());
         return tag;
     }
@@ -115,6 +135,30 @@ public class RegionStorage extends SavedData {
         return new StorageNode(id, data);
     }
 
+    /**
+     * Searches all nodes for the first one that is owned by given owner UUID
+     */
+    @Nullable
+    public StorageNode findNodeByOwner(UUID ownerUUID) {
+        for (Map.Entry<UUID, StorageNodeData> entry : nodesDataMap.entrySet()) {
+            StorageNodeData data = entry.getValue();
+            if(data.ownerUUID == ownerUUID) {
+                return new StorageNode(entry.getKey(), data);
+            }
+        }
+        return null;
+    }
+    /**
+     * Searches all nodes for the first one that is owned by given owner player
+     */
+    @Nullable
+    public StorageNode findNodeByOwner(ServerPlayer player) {
+        return findNodeByOwner(player.getUUID());
+    }
+
+    /**
+     * Returns the node the player is currently in, if any
+     */
     @Nullable
     public StorageNode getActiveNode(ServerPlayer player) {
         if(player.hasData(RegistryAttachmentTypes.NODE_ID)) {

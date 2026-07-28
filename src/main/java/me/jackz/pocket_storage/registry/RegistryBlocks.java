@@ -20,6 +20,7 @@ public class RegistryBlocks {
                     .mapColor(MapColor.WOOD)
                     .destroyTime(4.0f)
                     .explosionResistance(1000.0f)
+                    .noOcclusion()
                     .sound(SoundType.WOOD)
                     .isValidSpawn((blk, get, pos, type) -> false)
             )
