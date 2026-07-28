@@ -1,6 +1,7 @@
 package me.jackz.pocket_storage;
 
 import com.mojang.logging.LogUtils;
+import me.jackz.pocket_storage.registry.RegisterAttachmentTypes;
 import me.jackz.pocket_storage.registry.RegistryBlockEntities;
 import me.jackz.pocket_storage.registry.RegistryBlocks;
 import me.jackz.pocket_storage.registry.RegistryItems;
@@ -64,6 +65,7 @@ public class Pocket_storage {
         RegistryItems.register(modEventBus);
         RegistryBlocks.register(modEventBus);
         RegistryBlockEntities.register(modEventBus);
+        RegisterAttachmentTypes.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Pocket_storage) to respond directly to events.

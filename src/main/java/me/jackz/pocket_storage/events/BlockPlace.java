@@ -1,14 +1,17 @@
 package me.jackz.pocket_storage.events;
 
+import me.jackz.pocket_storage.dim.StorageNode;
 import me.jackz.pocket_storage.registry.RegistryBlocks;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
 import static me.jackz.pocket_storage.Pocket_storage.MODID;
@@ -29,6 +32,15 @@ public class BlockPlace {
                 event.setCanceled(true);
                 return;
             }
+        }
+    }
+
+    @SubscribeEvent()
+    private static void onDisconnect(PlayerEvent.PlayerLoggedOutEvent event) {
+        // Restore player back to position outside of storage world on quit
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if(player.level().dimension() ==  RegistryDims.STORAGE_DIM) {
+            StorageNode.restorePlayer(player);
         }
     }
 }

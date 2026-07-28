@@ -1,5 +1,5 @@
 {
-  "itemGroup.pocket_storage": "Example Mod Tab",
-  "block.pocket_storage.example_block": "Example Block",
-  "item.pocket_storage.example_item": "Example Item"
+  "itemGroup.pocket_storage": "Pocket Storage",
+  "block.pocket_storage.pocket_chest": "Pocket Chest",
+  "item.pocket_storage.pocket_tool": "Pocket Tool"
 }
