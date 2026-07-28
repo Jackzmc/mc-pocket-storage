@@ -69,23 +69,23 @@ public class StorageNode {
         BlockPos.MutableBlockPos cursor = getBlockBottomCenter().mutable();
         int yMin = data.cornerPos.getY();
         int yMax = yMin + RegionStorage.SIZE[1];
-        for (int y = yMin; y < yMax; y++) {
+        for (int y = yMax - 1; y > yMin; y--) {
             cursor.setY(y);
-            // Use vanilla noCollision for the 2-tall player box
-            AABB playerBox = player.getDimensions(Pose.STANDING).makeBoundingBox(cursor.getCenter());
+            Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y, cursor.getZ() + 0.5);
+            AABB playerBox = player.getDimensions(Pose.STANDING).makeBoundingBox(feetPos);
             if (level.noCollision(playerBox)) {
                 // Check there's something to stand on below
                 cursor.below();
                 if (!level.getBlockState(cursor).getCollisionShape(level, cursor).isEmpty()) {
-                    return cursor.above().getCenter();
+                    return feetPos;
                 }
             }
         }
-        return getBlockBottomCenter().getCenter();
+        return new Vec3(cursor.getX() + 0.5, yMin + 1, cursor.getZ() + 0.5);
     }
 
     public static boolean restorePlayer(ServerPlayer player) {
-        LevelLocationAttachment attachment = LevelLocationAttachment.fromPlayerPosition(player);
+        LevelLocationAttachment attachment = player.getData(RegistryAttachmentTypes.LAST_LOCATION);
         player.removeData(RegistryAttachmentTypes.NODE_ID);
         if(attachment.dim == RegistryDims.STORAGE_DIM || !attachment.tryRestore(player)) {
             Pocket_storage.LOGGER.warn("No restore location found - using fallback");

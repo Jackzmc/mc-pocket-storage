@@ -18,6 +18,10 @@ public class StorageDimTransition {
         return new DimensionTransition(targetLevel, pos, Vec3.ZERO, rotation.y, rotation.x, DimensionTransition.DO_NOTHING);
     }
 
+    public static DimensionTransition to(ServerLevel targetLevel, Vec3 pos, Vec3 rotation) {
+        return new DimensionTransition(targetLevel, pos, Vec3.ZERO, (float) rotation.x, (float) rotation.x, DimensionTransition.DO_NOTHING);
+    }
+
     public static void enterStorageDimension(ServerPlayer player, Vec3 pos) {
         ServerLevel level = player.getServer().getLevel(RegistryDims.STORAGE_DIM);
         if(level == null) {

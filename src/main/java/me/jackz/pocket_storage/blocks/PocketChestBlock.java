@@ -11,6 +11,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -76,6 +78,7 @@ public class PocketChestBlock extends Block implements EntityBlock {
         if(level.dimension() == RegistryDims.STORAGE_DIM) {
             // Inside dimension, always just return home
             StorageNode.restorePlayer(sp);
+            level.playSound(null, pos, SoundEvents.CHEST_CLOSE, SoundSource.BLOCKS, 1.0f, 1.0f);
             return ItemInteractionResult.SUCCESS;
         } else {
             // Outside dimension, check owner and teleport to
@@ -97,6 +100,7 @@ public class PocketChestBlock extends Block implements EntityBlock {
                 } else if(node != null) {
                     Pocket_storage.LOGGER.debug("node {}. teleporting", node.getId());
                     node.teleportPlayerTo(sp);
+                    level.playSound(null, pos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.0f);
                 }
             }
         }
