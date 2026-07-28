@@ -1,6 +1,7 @@
 package me.jackz.pocket_storage.dim;
 
 import me.jackz.pocket_storage.Pocket_storage;
+import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -8,21 +9,19 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import javax.annotation.Nullable;
-import javax.swing.plaf.synth.Region;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 public class RegionStorage extends SavedData {
     public static final int DISTANCE_BETWEEN = 100;
-    public static final int SIZE = 50;
+    public static final int[] SIZE = { 20, 20, 20 };
 
     private Map<UUID, StorageNodeData> nodesDataMap = new HashMap<>();
 
@@ -48,9 +47,10 @@ public class RegionStorage extends SavedData {
         ListTag list = tag.getList("regions", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entry = list.getCompound(i);
-            UUID id = entry.getUUID("ownerUUID");
+            UUID id = entry.getUUID("id");
+            UUID ownerUUID = entry.getUUID("ownerUUID");
             BlockPos pos = BlockPos.of(entry.getLong("origin"));
-            StorageNodeData nodeData = new StorageNodeData(id, pos);
+            StorageNodeData nodeData = new StorageNodeData(ownerUUID, pos);
             storage.nodesDataMap.put(id, nodeData);
         }
         storage.nextPos = BlockPos.of(tag.getLong("next_pos"));
@@ -62,6 +62,7 @@ public class RegionStorage extends SavedData {
         ListTag list = new ListTag();
         for (Map.Entry<UUID, StorageNodeData> e : nodesDataMap.entrySet()) {
             CompoundTag entry = new CompoundTag();
+            entry.putUUID("id", e.getKey());
             entry.putUUID("ownerUUID", e.getValue().ownerUUID);
             entry.putLong("origin", e.getValue().cornerPos.asLong());
             list.add(entry);
@@ -112,5 +113,14 @@ public class RegionStorage extends SavedData {
         if(data == null) return null;
 
         return new StorageNode(id, data);
+    }
+
+    @Nullable
+    public StorageNode getActiveNode(ServerPlayer player) {
+        if(player.hasData(RegistryAttachmentTypes.NODE_ID)) {
+            UUID id = player.getData(RegistryAttachmentTypes.NODE_ID);
+            return getNode(id);
+        }
+        return null;
     }
 }

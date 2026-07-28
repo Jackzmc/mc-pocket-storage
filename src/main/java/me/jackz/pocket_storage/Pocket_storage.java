@@ -1,7 +1,7 @@
 package me.jackz.pocket_storage;
 
 import com.mojang.logging.LogUtils;
-import me.jackz.pocket_storage.registry.RegisterAttachmentTypes;
+import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
 import me.jackz.pocket_storage.registry.RegistryBlockEntities;
 import me.jackz.pocket_storage.registry.RegistryBlocks;
 import me.jackz.pocket_storage.registry.RegistryItems;
@@ -22,16 +22,10 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
-
-import java.util.function.Supplier;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(Pocket_storage.MODID)
@@ -65,7 +59,7 @@ public class Pocket_storage {
         RegistryItems.register(modEventBus);
         RegistryBlocks.register(modEventBus);
         RegistryBlockEntities.register(modEventBus);
-        RegisterAttachmentTypes.register(modEventBus);
+        RegistryAttachmentTypes.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Pocket_storage) to respond directly to events.

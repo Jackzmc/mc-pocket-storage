@@ -36,6 +36,8 @@ public class PocketChestBlockEntity extends BlockEntity {
 
     public void setNode(StorageNode node) {
         this.nodeId = node.getId();
+        setChanged();
+        Pocket_storage.LOGGER.debug("set node {} on blockEntity {}", nodeId, worldPosition);
     }
 
     @Override
@@ -43,15 +45,15 @@ public class PocketChestBlockEntity extends BlockEntity {
         super.loadAdditional(compound, provider);
         if (compound.contains(TAG_NODE_ID)) {
             this.nodeId = UUID.fromString(compound.getString(TAG_NODE_ID));
-        } else {
-            check();
         }
     }
 
     @Override
     public void saveAdditional(CompoundTag compound, HolderLookup.Provider provider) {
         super.saveAdditional(compound, provider);
-        if(nodeId != null)
+        if(nodeId != null) {
+            Pocket_storage.LOGGER.debug("saving node {} on blockEntity {}", nodeId, worldPosition);
             compound.putString(TAG_NODE_ID, nodeId.toString());
+        }
     }
 }

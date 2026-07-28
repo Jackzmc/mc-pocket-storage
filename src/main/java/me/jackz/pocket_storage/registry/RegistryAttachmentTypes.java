@@ -1,12 +1,8 @@
 package me.jackz.pocket_storage.registry;
 
-import com.mojang.serialization.Codec;
 import me.jackz.pocket_storage.util.LevelLocationAttachment;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
-import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
@@ -15,7 +11,7 @@ import java.util.function.Supplier;
 
 import static me.jackz.pocket_storage.Pocket_storage.MODID;
 
-public class RegisterAttachmentTypes {
+public class RegistryAttachmentTypes {
     private static final DeferredRegister<AttachmentType<?>> REGISTER = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
 
     /**
