@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "pocket_storage:block/pocket_chest",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "pocket_storage:block/pocket_chest"
+    },
+    "facing=south": {
+      "model": "pocket_storage:block/pocket_chest",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "pocket_storage:block/pocket_chest",
+      "y": 270
+    },
+    "": {
+      "model": "pocket_storage:block/pocket_chest"
+    }
+  }
+}
