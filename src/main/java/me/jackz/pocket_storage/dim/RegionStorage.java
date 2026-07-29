@@ -8,18 +8,25 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static me.jackz.pocket_storage.Pocket_storage.LOGGER;
+import static me.jackz.pocket_storage.Pocket_storage.MODID;
+
 public class RegionStorage extends SavedData {
     public static final int DISTANCE_BETWEEN = 100;
     public static final int[] SIZE = { 20, 20, 20 };
+    public static final ResourceLocation TEMPLATE_ROOM_20x20x20_PLAIN = ResourceLocation.fromNamespaceAndPath(MODID, "20x20x20_plain");
 
     private Map<UUID, StorageNodeData> nodesDataMap = new HashMap<>();
     private Map<UUID, Set<UUID>> playerNodesMap = new HashMap<>();
@@ -46,16 +53,14 @@ public class RegionStorage extends SavedData {
         ListTag list = tag.getList("regions", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entry = list.getCompound(i);
-            UUID id = entry.getUUID("id");
-            UUID ownerUUID = entry.getUUID("ownerUUID");
-            BlockPos pos = BlockPos.of(entry.getLong("origin"));
-            StorageNodeData nodeData = new StorageNodeData(ownerUUID, pos);
-            storage.nodesDataMap.put(id, nodeData);
-            if(!storage.playerNodesMap.containsKey(ownerUUID)) {
-                storage.playerNodesMap.put(ownerUUID, new HashSet<>());
+            StorageNodeData nodeData = StorageNodeData.deserialize(entry);
+            storage.nodesDataMap.put(nodeData.id, nodeData);
+            // Track owners' ids:
+            if(!storage.playerNodesMap.containsKey(nodeData.ownerUUID)) {
+                storage.playerNodesMap.put(nodeData.ownerUUID, new HashSet<>());
             }
-            Set<UUID> nodeList = storage.playerNodesMap.get(ownerUUID);
-            nodeList.add(id);
+            Set<UUID> nodeList = storage.playerNodesMap.get(nodeData.ownerUUID);
+            nodeList.add(nodeData.id);
         }
         storage.nextPos = BlockPos.of(tag.getLong("next_pos"));
         return storage;
@@ -65,10 +70,7 @@ public class RegionStorage extends SavedData {
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (Map.Entry<UUID, StorageNodeData> e : nodesDataMap.entrySet()) {
-            CompoundTag entry = new CompoundTag();
-            entry.putUUID("id", e.getKey());
-            entry.putUUID("ownerUUID", e.getValue().ownerUUID);
-            entry.putLong("origin", e.getValue().cornerPos.asLong());
+            CompoundTag entry = e.getValue().serialize();
             list.add(entry);
         }
         tag.put("regions", list);
@@ -100,17 +102,22 @@ public class RegionStorage extends SavedData {
         return nextPos;
     }
 
-    public StorageNode createNode(Player ownerPlayer) {
+    public StorageNode createNode(ServerPlayer ownerPlayer, ResourceLocation templateId) {
+        StructureTemplateManager manager = ((ServerLevel)ownerPlayer.level()).getStructureManager();
+        Optional<StructureTemplate> template = manager.get(templateId);
+        if(template.isEmpty()) {
+            // TODO: error
+            LOGGER.error("Room template \"{}\" not found", templateId);
+            return null;
+        }
+
         BlockPos nextPos = advanceNextPosition();
-
-        UUID id = UUID.randomUUID();
-        StorageNodeData data =  new StorageNodeData(ownerPlayer.getUUID(), nextPos);
-        StorageNode node = new StorageNode(id, data);
-        nodesDataMap.put(id, data);
-
         ServerLevel dim = getStorageLevel(ownerPlayer.getServer());
 
-        node.createStructure(dim);
+        UUID id = UUID.randomUUID();
+//        StorageNodeData data =  new StorageNodeData(ownerPlayer.getUUID(), nextPos, );
+        StorageNode node = StorageNode.create(id, dim, ownerPlayer, template.get(), nextPos);
+        nodesDataMap.put(id, node.getData());
 
         Pocket_storage.LOGGER.info("Created new node {} owned by {} at {}", id, ownerPlayer, nextPos);
 
@@ -132,7 +139,7 @@ public class RegionStorage extends SavedData {
         StorageNodeData data = nodesDataMap.get(id);
         if(data == null) return null;
 
-        return new StorageNode(id, data);
+        return StorageNode.fromData(id, data);
     }
 
     /**
@@ -143,7 +150,7 @@ public class RegionStorage extends SavedData {
         for (Map.Entry<UUID, StorageNodeData> entry : nodesDataMap.entrySet()) {
             StorageNodeData data = entry.getValue();
             if(data.ownerUUID == ownerUUID) {
-                return new StorageNode(entry.getKey(), data);
+                return StorageNode.fromData(entry.getKey(), data);
             }
         }
         return null;
@@ -166,5 +173,16 @@ public class RegionStorage extends SavedData {
             return getNode(id);
         }
         return null;
+    }
+
+    @Nullable
+    public static StructureTemplate resolveTemplate(ServerLevel level, ResourceLocation templateId) {
+        StructureTemplateManager manager = level.getStructureManager();
+        Optional<StructureTemplate> template = manager.get(templateId);
+        if(template.isEmpty()) {
+            LOGGER.error("Room template \"{}\" not found", templateId);
+            return null;
+        }
+        return template;
     }
 }

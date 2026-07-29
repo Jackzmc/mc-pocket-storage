@@ -60,6 +60,12 @@ public class StorageWorldEvents {
         RegionStorage store = RegionStorage.get(voidLevel);
         List<ServerPlayer> players = new ArrayList<>(voidLevel.players());
         for (ServerPlayer player : players) {
+            if(player.getY() < 0) {
+                voidLevel.getServer().execute(() -> {
+                    StorageNode.restorePlayer(player);
+                });
+                continue;
+            }
             if (!player.isShiftKeyDown() || !player.onGround()) continue;
             // Require to stand still, mostly to reduce multiple calls
             if (player.getDeltaMovement().lengthSqr() > 0.01) continue;

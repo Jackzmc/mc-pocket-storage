@@ -57,8 +57,8 @@ public class LevelLocationAttachment {
         public LevelLocationAttachment read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
             LevelLocationAttachment att = new LevelLocationAttachment();
             att.dim = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(tag.getString("dim")));
-            att.lastPos = BlockPos.containing(LevelLocationAttachment.getVec(tag, "pos"));
-            att.lastAng = LevelLocationAttachment.getVec(tag, "ang");
+            att.lastPos = BlockPos.containing(NBTUtil.getVec3(tag, "pos"));
+            att.lastAng = NBTUtil.getVec3(tag, "ang");
             return att;
         }
 
@@ -70,28 +70,10 @@ public class LevelLocationAttachment {
             }
             CompoundTag tag = new CompoundTag();
             tag.putString("dim", att.dim.location().toString());
-            LevelLocationAttachment.putVec(tag, "pos", att.lastPos.getCenter());
-            LevelLocationAttachment.putVec(tag, "ang", att.lastAng);
+            NBTUtil.putVec3(tag, "pos", att.lastPos.getCenter());
+            NBTUtil.putVec3(tag, "ang", att.lastAng);
             Pocket_storage.LOGGER.debug("saving pos={} {}", att.lastPos, att.lastPos.getCenter());
             return tag;
         }
-    }
-
-    public static ListTag putVec(CompoundTag tag, String key, Vec3 vec) {
-        ListTag list = new ListTag();
-        list.add(DoubleTag.valueOf(vec.x));
-        list.add(DoubleTag.valueOf(vec.y));
-        list.add(DoubleTag.valueOf(vec.z));
-        tag.put(key, list);
-        return list;
-    }
-
-    public static Vec3 getVec(CompoundTag tag, String key) {
-        ListTag list = tag.getList(key, DoubleTag.TAG_DOUBLE);
-        return new Vec3(
-            list.getDouble(0),
-            list.getDouble(1),
-            list.getDouble(2)
-        );
     }
 }

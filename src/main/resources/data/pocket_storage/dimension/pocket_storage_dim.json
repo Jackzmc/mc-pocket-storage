@@ -7,5 +7,9 @@
       "biome": "minecraft:plains",
       "structure_overrides": []
     }
-  }
+  },
+  "has_skylight": false,
+  "has_fixed_time": true,
+  "has_ceiling": true,
+  "ambient_light": 1.0
 }

@@ -7,6 +7,7 @@ import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.util.LevelLocationAttachment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -15,20 +16,51 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Optional;
 import java.util.UUID;
 
+import static me.jackz.pocket_storage.Pocket_storage.LOGGER;
+import static me.jackz.pocket_storage.Pocket_storage.MODID;
 import static me.jackz.pocket_storage.util.Structure.buildBox;
 
 public class StorageNode {
     private StorageNodeData data;
-    private UUID id;
-    public StorageNode(UUID nodeId, StorageNodeData data) {
-        this.id = nodeId;
+    private StorageNode(StorageNodeData data) {
         this.data = data;
+    }
+
+
+    public static StorageNode fromData(StorageNodeData data) {
+        return new StorageNode(data);
+    }
+
+    public StorageNodeData getData() {
+        return data;
+    }
+
+    public static StorageNode create(UUID nodeId, ServerLevel level, ServerPlayer owner, ResourceLocation templateId, BlockPos cornerPos) {
+        UUID id = UUID.randomUUID();
+
+        StructureTemplate template = RegionStorage.resolveTemplate(level, templateId);
+        if(template == null) return null;
+
+        StorageNodeData data = new StorageNodeData(id, owner.getUUID(), cornerPos, template.getSize(), templateId);
+        StorageNode node = new StorageNode(data);
+
+        node.createStructure(level, template);
+
+        Pocket_storage.LOGGER.info("Created new node {} owned by {} at {}", id, owner.getUUID(), cornerPos);
+
+        return node;
     }
 
     public BlockPos getCorner() {
@@ -56,7 +88,7 @@ public class StorageNode {
         Pocket_storage.LOGGER.debug("dim set to {}", attach.dim);
         Pocket_storage.LOGGER.debug("stored last loc {}", attach);
         player.setData(RegistryAttachmentTypes.LAST_LOCATION, attach);
-        player.setData(RegistryAttachmentTypes.NODE_ID, id);
+        player.setData(RegistryAttachmentTypes.NODE_ID, this.getId());
 
         Vec3 pos = findSafeSpawn(player);
         StorageDimTransition.enterStorageDimension(player, pos);
@@ -103,34 +135,40 @@ public class StorageNode {
     }
 
     public UUID getId() {
-        return id;
+        return data.id;
     }
 
     public UUID getOwnerId() {
         return data.ownerUUID;
     }
 
-    protected void createStructure(ServerLevel level) {
-        BlockPos btmCenter = getBlockBottomCenter().above();
-        // Add exit chest
-        Block block = RegistryBlocks.POCKET_CHEST.get();
-        level.setBlock(btmCenter.above(), block.defaultBlockState(), Block.UPDATE_NONE);
+    protected void createStructure(ServerLevel level, StructureTemplate template) {
+        if(!applyRoomTemplate(template, level, data.cornerPos)) {
+            Pocket_storage.LOGGER.warn("Failed to apply room template");
+        }
 
-        BlockState wallBlock = Blocks.BEDROCK.defaultBlockState();
-        buildBox(level, data.cornerPos, RegionStorage.SIZE[0], RegionStorage.SIZE[1], RegionStorage.SIZE[2], wallBlock, null);
-
-        BlockState lightBlock = Blocks.TORCH.defaultBlockState();
-        level.setBlock(btmCenter.east(), lightBlock, Block.UPDATE_NONE);
-        level.setBlock(btmCenter.west(), lightBlock, Block.UPDATE_NONE);
-        level.setBlock(btmCenter.north(), lightBlock, Block.UPDATE_NONE);
-        level.setBlock(btmCenter.south(), lightBlock, Block.UPDATE_NONE);
-
-
-        // for debug
-        BlockState test = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:glowstone"))
-                .defaultBlockState();
-        level.setBlock(data.cornerPos, test, Block.UPDATE_NONE);
+//        BlockState lightBlock = Blocks.TORCH.defaultBlockState();
+//        level.setBlock(btmCenter.east(), lightBlock, Block.UPDATE_NONE);
+//        level.setBlock(btmCenter.west(), lightBlock, Block.UPDATE_NONE);
+//        level.setBlock(btmCenter.north(), lightBlock, Block.UPDATE_NONE);
+//        level.setBlock(btmCenter.south(), lightBlock, Block.UPDATE_NONE);
     }
 
+
+    private static boolean applyRoomTemplate(StructureTemplate template, ServerLevel level, BlockPos origin) {
+        Vec3i size = template.getSize();
+        LOGGER.debug("template size={}", size);
+
+        StructurePlaceSettings settings = new StructurePlaceSettings()
+                .setRotation(Rotation.NONE)
+                .setMirror(Mirror.NONE)
+                .setIgnoreEntities(true);
+//                .setKnownShape(true);
+
+        BlockState wallBlock = Blocks.BEDROCK.defaultBlockState();
+        BlockPos innerOrigin = new BlockPos(origin.getX() + 1, origin.getY() + 1, origin.getZ() + 1);
+        buildBox(level, origin, size.getX() + 1, size.getY() + 1, size.getZ() + 1, wallBlock, null);
+        return template.placeInWorld(level, innerOrigin, innerOrigin, settings, level.getRandom(), Block.UPDATE_CLIENTS);
+    }
 
 }

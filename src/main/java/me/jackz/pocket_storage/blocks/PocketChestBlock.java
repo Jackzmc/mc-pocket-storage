@@ -55,7 +55,7 @@ public class PocketChestBlock extends Block implements EntityBlock {
             PocketChestBlockEntity ent = getBlockEntity(worldIn, pos);
             if(ent != null) {
                 RegionStorage store = RegionStorage.get(sLevel);
-                StorageNode node = store.createNode(player);
+                StorageNode node = store.createNode(player, RegionStorage.TEMPLATE_ROOM_20x20x20_PLAIN);
                 ent.setNode(node);
                 Pocket_storage.LOGGER.debug("node = {}", node.getId());
             }
