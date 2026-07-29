@@ -2,40 +2,45 @@ package me.jackz.pocket_storage.blocks;
 
 import me.jackz.pocket_storage.Pocket_storage;
 import me.jackz.pocket_storage.dim.RegionStorage;
-import me.jackz.pocket_storage.dim.StorageDimTransition;
 import me.jackz.pocket_storage.dim.StorageNode;
+import me.jackz.pocket_storage.registry.RegistryComponents;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.registry.RegistryItems;
-import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class PocketChestBlock extends Block implements EntityBlock {
@@ -44,6 +49,47 @@ public class PocketChestBlock extends Block implements EntityBlock {
         registerDefaultState(defaultBlockState());
 
 //        registerDefaultState(defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false));
+    }
+
+    // TODO: move to diff method for survival to work
+    @Override
+    public void attack(BlockState state, Level world, BlockPos pos, Player player) {
+        if (player instanceof FakePlayer)
+            return;
+        if (world.isClientSide)
+            return;
+        if (world instanceof ServerLevel) {
+            Pocket_storage.LOGGER.debug("popping");
+            ItemStack cloneItemStack = getCloneItemStack(world, pos, state);
+            world.destroyBlock(pos, false);
+            popResource(world, pos, cloneItemStack);
+        }
+    }
+
+    @Override
+    @NotNull
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+        PocketChestBlockEntity blockEntity = getBlockEntity(level, pos);
+
+        if(blockEntity != null) {
+            RegionStorage store = RegionStorage.get((ServerLevel) level);
+            StorageNode node = store.getNode(blockEntity.getNodeId());
+            blockEntity.setRemoved();
+
+            if(node != null) {
+                ItemStack item = new ItemStack(this);
+                item.set(RegistryComponents.NODE_ID, node.getId().toString());
+
+                ItemLore lore = new ItemLore(List.of(
+                        Component.literal("Node ").append(node.getId().toString())
+                ));
+                item.set(DataComponents.LORE, lore);
+                Pocket_storage.LOGGER.debug("clone: set id {}", node.getId());
+                return item;
+            }
+        }
+        Pocket_storage.LOGGER.debug("clone: plain item");
+        return new ItemStack(this);
     }
 
     @Override
@@ -55,7 +101,17 @@ public class PocketChestBlock extends Block implements EntityBlock {
             PocketChestBlockEntity ent = getBlockEntity(worldIn, pos);
             if(ent != null) {
                 RegionStorage store = RegionStorage.get(sLevel);
-                StorageNode node = store.createNode(player, RegionStorage.TEMPLATE_ROOM_20x20x20_PLAIN);
+                StorageNode node;
+                String id = stack.get(RegistryComponents.NODE_ID);
+                if(id != null) {
+                    node = store.getNode(UUID.fromString(id));
+                    if(node == null) {
+                        player.sendSystemMessage(Component.literal("Node ID is invalid").withColor(Color.RED.getRGB()));
+                        return;
+                    }
+                } else {
+                    node = store.createNode(player, RegionStorage.TEMPLATE_ROOM_20x20x20_PLAIN);
+                }
                 ent.setNode(node);
             }
         }
@@ -106,6 +162,14 @@ public class PocketChestBlock extends Block implements EntityBlock {
         return ItemInteractionResult.SUCCESS;
     }
 
+
+    @Override
+    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        ItemStack item = new ItemStack(this.asItem(), 1);
+
+        return List.of(item);
+    }
+
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
         return new PocketChestBlockEntity(blockPos, blockState);
@@ -119,7 +183,6 @@ public class PocketChestBlock extends Block implements EntityBlock {
         }
         return null;
     }
-
 
     @Override
     public void tick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom) {

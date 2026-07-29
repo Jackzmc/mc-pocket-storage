@@ -7,6 +7,8 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.UUID;
+
 import static me.jackz.pocket_storage.Pocket_storage.MODID;
 
 public class RegistryItems {

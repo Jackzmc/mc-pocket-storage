@@ -1,10 +1,7 @@
 package me.jackz.pocket_storage;
 
 import com.mojang.logging.LogUtils;
-import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
-import me.jackz.pocket_storage.registry.RegistryBlockEntities;
-import me.jackz.pocket_storage.registry.RegistryBlocks;
-import me.jackz.pocket_storage.registry.RegistryItems;
+import me.jackz.pocket_storage.registry.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -60,6 +57,7 @@ public class Pocket_storage {
         RegistryBlocks.register(modEventBus);
         RegistryBlockEntities.register(modEventBus);
         RegistryAttachmentTypes.register(modEventBus);
+        RegistryComponents.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Pocket_storage) to respond directly to events.
