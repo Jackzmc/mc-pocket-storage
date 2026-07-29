@@ -1,0 +1,6 @@
+TODO:
+- prevent navigation outside (TP out)
+- prevent wall break
+- on break, drop with node ID (w/ glint)
+- cmd /pocket chest <id>
+- restore ang too
