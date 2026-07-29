@@ -1,15 +1,11 @@
 {
-  "type": "minecraft:overworld",
+  "type": "pocket_storage:void",
   "generator": {
     "type": "minecraft:flat",
     "settings": {
       "layers": [],
-      "biome": "minecraft:plains",
+      "biome": "minecraft:the_void",
       "structure_overrides": []
     }
-  },
-  "has_skylight": false,
-  "has_fixed_time": true,
-  "has_ceiling": true,
-  "ambient_light": 1.0
+  }
 }

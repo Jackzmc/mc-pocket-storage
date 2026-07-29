@@ -48,17 +48,15 @@ public class StorageNode {
     }
 
     public static StorageNode create(UUID nodeId, ServerLevel level, ServerPlayer owner, ResourceLocation templateId, BlockPos cornerPos) {
-        UUID id = UUID.randomUUID();
-
         StructureTemplate template = RegionStorage.resolveTemplate(level, templateId);
-        if(template == null) return null;
+        if(template == null) throw new IllegalArgumentException("template could not be resolved");
 
-        StorageNodeData data = new StorageNodeData(id, owner.getUUID(), cornerPos, template.getSize(), templateId);
+        StorageNodeData data = new StorageNodeData(nodeId, owner.getUUID(), cornerPos, template.getSize(), templateId);
         StorageNode node = new StorageNode(data);
 
         node.createStructure(level, template);
 
-        Pocket_storage.LOGGER.info("Created new node {} owned by {} at {}", id, owner.getUUID(), cornerPos);
+        Pocket_storage.LOGGER.info("Created new node {} owned by {} at {}", nodeId, owner.getUUID(), cornerPos);
 
         return node;
     }
@@ -69,6 +67,13 @@ public class StorageNode {
 
     public BlockPos getBlockCenter() {
         return getBlockBottomCenter().relative(Direction.UP, RegionStorage.SIZE[1] / 2);
+    }
+
+    public Vec3 getCenter() {
+        float x = (float)data.cornerPos.getX() + ((float)RegionStorage.SIZE[0] / 2f);
+        float y = data.cornerPos.getY();
+        float z = data.cornerPos.getZ() + (RegionStorage.SIZE[2] / 2f);
+        return new Vec3(x, y, z);
     }
 
     public BlockPos getBlockBottomCenter() {
@@ -103,7 +108,7 @@ public class StorageNode {
         int yMax = yMin + RegionStorage.SIZE[1];
         for (int y = yMax - 1; y > yMin; y--) {
             cursor.setY(y);
-            Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y, cursor.getZ() + 0.5);
+            Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y + 1, cursor.getZ() + 0.5);
             AABB playerBox = player.getDimensions(Pose.STANDING).makeBoundingBox(feetPos);
             if (level.noCollision(playerBox)) {
                 // Check there's something to stand on below
@@ -140,6 +145,10 @@ public class StorageNode {
 
     public UUID getOwnerId() {
         return data.ownerUUID;
+    }
+
+    public Vec3i getSize() {
+        return data.size;
     }
 
     protected void createStructure(ServerLevel level, StructureTemplate template) {

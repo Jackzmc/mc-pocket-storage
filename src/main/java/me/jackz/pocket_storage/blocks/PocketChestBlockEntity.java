@@ -52,7 +52,6 @@ public class PocketChestBlockEntity extends BlockEntity {
     public void saveAdditional(CompoundTag compound, HolderLookup.Provider provider) {
         super.saveAdditional(compound, provider);
         if(nodeId != null) {
-            Pocket_storage.LOGGER.debug("saving node {} on blockEntity {}", nodeId, worldPosition);
             compound.putString(TAG_NODE_ID, nodeId.toString());
         }
     }

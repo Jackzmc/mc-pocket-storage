@@ -51,13 +51,12 @@ public class PocketChestBlock extends Block implements EntityBlock {
         if (worldIn.isClientSide) return;
         if (worldIn.dimension() == RegistryDims.STORAGE_DIM) return;
         // Set ID of owner before it's placed in world
-        if((placer instanceof Player player) && worldIn instanceof ServerLevel sLevel) {
+        if((placer instanceof ServerPlayer player) && worldIn instanceof ServerLevel sLevel) {
             PocketChestBlockEntity ent = getBlockEntity(worldIn, pos);
             if(ent != null) {
                 RegionStorage store = RegionStorage.get(sLevel);
                 StorageNode node = store.createNode(player, RegionStorage.TEMPLATE_ROOM_20x20x20_PLAIN);
                 ent.setNode(node);
-                Pocket_storage.LOGGER.debug("node = {}", node.getId());
             }
         }
         super.setPlacedBy(worldIn, pos, state, placer, stack);

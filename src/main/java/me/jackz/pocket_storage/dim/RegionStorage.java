@@ -103,20 +103,12 @@ public class RegionStorage extends SavedData {
     }
 
     public StorageNode createNode(ServerPlayer ownerPlayer, ResourceLocation templateId) {
-        StructureTemplateManager manager = ((ServerLevel)ownerPlayer.level()).getStructureManager();
-        Optional<StructureTemplate> template = manager.get(templateId);
-        if(template.isEmpty()) {
-            // TODO: error
-            LOGGER.error("Room template \"{}\" not found", templateId);
-            return null;
-        }
-
         BlockPos nextPos = advanceNextPosition();
         ServerLevel dim = getStorageLevel(ownerPlayer.getServer());
 
         UUID id = UUID.randomUUID();
 //        StorageNodeData data =  new StorageNodeData(ownerPlayer.getUUID(), nextPos, );
-        StorageNode node = StorageNode.create(id, dim, ownerPlayer, template.get(), nextPos);
+        StorageNode node = StorageNode.create(id, dim, ownerPlayer, templateId, nextPos);
         nodesDataMap.put(id, node.getData());
 
         Pocket_storage.LOGGER.info("Created new node {} owned by {} at {}", id, ownerPlayer, nextPos);
@@ -139,7 +131,7 @@ public class RegionStorage extends SavedData {
         StorageNodeData data = nodesDataMap.get(id);
         if(data == null) return null;
 
-        return StorageNode.fromData(id, data);
+        return StorageNode.fromData(data);
     }
 
     /**
@@ -150,7 +142,7 @@ public class RegionStorage extends SavedData {
         for (Map.Entry<UUID, StorageNodeData> entry : nodesDataMap.entrySet()) {
             StorageNodeData data = entry.getValue();
             if(data.ownerUUID == ownerUUID) {
-                return StorageNode.fromData(entry.getKey(), data);
+                return StorageNode.fromData(data);
             }
         }
         return null;
@@ -183,6 +175,6 @@ public class RegionStorage extends SavedData {
             LOGGER.error("Room template \"{}\" not found", templateId);
             return null;
         }
-        return template;
+        return template.get();
     }
 }
