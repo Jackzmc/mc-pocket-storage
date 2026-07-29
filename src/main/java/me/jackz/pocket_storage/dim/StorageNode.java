@@ -66,20 +66,22 @@ public class StorageNode {
     }
 
     public BlockPos getBlockCenter() {
-        return getBlockBottomCenter().relative(Direction.UP, RegionStorage.SIZE[1] / 2);
+        return getBlockBottomCenter().relative(Direction.UP, getSize().getY() / 2);
     }
 
     public Vec3 getCenter() {
-        float x = (float)data.cornerPos.getX() + ((float)RegionStorage.SIZE[0] / 2f);
+        Vec3i size = getSize();
+        float x = (float)data.cornerPos.getX() + ((float)size.getX() / 2f);
         float y = data.cornerPos.getY();
-        float z = data.cornerPos.getZ() + (RegionStorage.SIZE[2] / 2f);
+        float z = data.cornerPos.getZ() + (size.getZ() / 2f);
         return new Vec3(x, y, z);
     }
 
     public BlockPos getBlockBottomCenter() {
-        int x = data.cornerPos.getX() + (RegionStorage.SIZE[0] / 2);
+        Vec3i size = getSize();
+        int x = data.cornerPos.getX() + (size.getX() / 2);
         int y = data.cornerPos.getY();
-        int z = data.cornerPos.getZ() + (RegionStorage.SIZE[2] / 2);
+        int z = data.cornerPos.getZ() + (size.getZ() / 2);
         return new BlockPos(x, y, z);
     }
 
@@ -105,7 +107,7 @@ public class StorageNode {
         ServerLevel level = (ServerLevel) player.level();
         BlockPos.MutableBlockPos cursor = getBlockBottomCenter().mutable();
         int yMin = data.cornerPos.getY();
-        int yMax = yMin + RegionStorage.SIZE[1];
+        int yMax = yMin + getSize().getY();
         for (int y = yMax - 1; y > yMin; y--) {
             cursor.setY(y);
             Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y + 1, cursor.getZ() + 0.5);

@@ -25,7 +25,6 @@ import static me.jackz.pocket_storage.Pocket_storage.MODID;
 
 public class RegionStorage extends SavedData {
     public static final int DISTANCE_BETWEEN = 100;
-    public static final int[] SIZE = { 20, 20, 20 };
     public static final ResourceLocation TEMPLATE_ROOM_20x20x20_PLAIN = ResourceLocation.fromNamespaceAndPath(MODID, "20x20x20_plain");
 
     private Map<UUID, StorageNodeData> nodesDataMap = new HashMap<>();

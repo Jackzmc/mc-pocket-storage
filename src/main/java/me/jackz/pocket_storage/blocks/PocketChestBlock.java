@@ -92,7 +92,7 @@ public class PocketChestBlock extends Block implements EntityBlock {
                         sp.sendSystemMessage(Component.literal("Owner UUID: ").append(node.getOwnerId().toString()));
                         sp.sendSystemMessage(Component.literal("Center Pos: ").append(node.getBlockCenter().toShortString()));
                         sp.sendSystemMessage(Component.literal("Corner Pos: ").append(node.getCorner().toShortString()));
-                        sp.sendSystemMessage(Component.literal("Size: ").append(Arrays.toString(RegionStorage.SIZE)));
+                        sp.sendSystemMessage(Component.literal("Size: ").append(node.getSize().toShortString()));
                     } else {
                         sp.sendSystemMessage(Component.literal("No node attached").withColor(Color.RED.getRGB()));
                     }
