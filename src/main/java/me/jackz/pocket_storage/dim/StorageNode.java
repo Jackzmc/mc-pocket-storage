@@ -104,13 +104,19 @@ public class StorageNode {
     }
 
     public Vec3 findSafeSpawn(ServerPlayer player) {
-        ServerLevel level = (ServerLevel) player.level();
+        ServerLevel level = player.getServer().getLevel(RegistryDims.STORAGE_DIM);
         BlockPos.MutableBlockPos cursor = getBlockBottomCenter().mutable();
+        if(level == null) return cursor.getCenter();
         int yMin = data.cornerPos.getY();
         int yMax = yMin + getSize().getY();
         for (int y = yMax - 1; y > yMin; y--) {
             cursor.setY(y);
-            Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y + 1, cursor.getZ() + 0.5);
+            BlockState block = level.getBlockState(cursor);
+//            LOGGER.debug("block={} cursor={} can={} tpTo={}", block, cursor, block.entityCanStandOn(level, cursor, player), cursor.above());
+//            if(block.entityCanStandOn(level, cursor, player)) {
+//                return cursor.above().getCenter();
+//            }
+            Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y, cursor.getZ() + 0.5);
             AABB playerBox = player.getDimensions(Pose.STANDING).makeBoundingBox(feetPos);
             if (level.noCollision(playerBox)) {
                 // Check there's something to stand on below

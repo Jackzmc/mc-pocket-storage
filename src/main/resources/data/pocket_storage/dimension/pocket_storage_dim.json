@@ -4,7 +4,8 @@
     "type": "minecraft:flat",
     "settings": {
       "layers": [],
-      "biome": "minecraft:the_void",
+      "biome": "pocket_storage:void",
+      "features": false,
       "structure_overrides": []
     }
   }

@@ -29,16 +29,6 @@ public class StorageNodeData {
         this.templateId = templateId;
     }
 
-
-    public Optional<StructureTemplate> resolveTemplate(ServerLevel level) {
-        StructureTemplateManager manager = level.getStructureManager();
-        Optional<StructureTemplate> template = manager.get(templateId);
-        if(template.isEmpty()) {
-            LOGGER.error("Room template \"{}\" not found", templateId);
-        }
-        return template;
-    }
-
     public CompoundTag serialize() {
         CompoundTag tag = new CompoundTag();
         tag.putUUID("ownerUUID", ownerUUID);

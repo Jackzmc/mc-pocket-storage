@@ -16,9 +16,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
@@ -30,16 +28,15 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,6 +65,35 @@ public class PocketChestBlock extends Block implements EntityBlock {
 
     @Override
     @NotNull
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        if (player instanceof FakePlayer) return null;
+        if (level.isClientSide) return null;
+        if (level instanceof ServerLevel) {
+            Pocket_storage.LOGGER.debug("popping");
+            ItemStack cloneItemStack = getCloneItemStack(level, pos, state);
+            level.destroyBlock(pos, false);
+            popResource(level, pos, cloneItemStack);
+            return state;
+        }
+        return null;
+    }
+
+    @Override
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
+        if (player instanceof FakePlayer) return false;
+        if (level.isClientSide) return false;
+        if (level instanceof ServerLevel) {
+            Pocket_storage.LOGGER.debug("popping");
+//            ItemStack cloneItemStack = getCloneItemStack(level, pos, state);
+//            level.destroyBlock(pos, false);
+//            popResource(level, pos, cloneItemStack);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    @NotNull
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
         PocketChestBlockEntity blockEntity = getBlockEntity(level, pos);
 
@@ -81,7 +107,7 @@ public class PocketChestBlock extends Block implements EntityBlock {
                 item.set(RegistryComponents.NODE_ID, node.getId().toString());
 
                 ItemLore lore = new ItemLore(List.of(
-                        Component.literal("Node ").append(node.getId().toString())
+                    Component.literal("Node ").append(node.getId().toString())
                 ));
                 item.set(DataComponents.LORE, lore);
                 Pocket_storage.LOGGER.debug("clone: set id {}", node.getId());

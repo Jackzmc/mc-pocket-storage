@@ -1,6 +1,6 @@
 TODO:
-- prevent navigation outside (TP out)
-- prevent wall break
 - on break, drop with node ID (w/ glint)
+   WORKS in survival only
 - cmd /pocket chest <id>
 - restore ang too
+- getSafeSpawn doesnt work (clip into floor, AND doesnt tp to top of stack of blocks)
