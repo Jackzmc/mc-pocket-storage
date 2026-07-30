@@ -92,30 +92,34 @@ public class PocketChestBlock extends Block implements EntityBlock {
         return false;
     }
 
+    public static ItemStack getChestItem(@Nullable UUID nodeId) {
+        ItemStack item = new ItemStack(RegistryItems.POCKET_CHEST_ITEM.asItem());
+        if (nodeId != null) {
+            item.set(RegistryComponents.NODE_ID, nodeId.toString());
+
+            ItemLore lore = new ItemLore(List.of(
+                Component.literal("Node ").append(nodeId.toString())
+            ));
+            item.set(DataComponents.LORE, lore);
+            Pocket_storage.LOGGER.debug("clone: set id {}",nodeId);
+        }
+        return item;
+    }
+
+    // TODO: static
     @Override
     @NotNull
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+        UUID id = null;
         PocketChestBlockEntity blockEntity = getBlockEntity(level, pos);
-
         if(blockEntity != null) {
             RegionStorage store = RegionStorage.get((ServerLevel) level);
             StorageNode node = store.getNode(blockEntity.getNodeId());
-            blockEntity.setRemoved();
-
             if(node != null) {
-                ItemStack item = new ItemStack(this);
-                item.set(RegistryComponents.NODE_ID, node.getId().toString());
-
-                ItemLore lore = new ItemLore(List.of(
-                    Component.literal("Node ").append(node.getId().toString())
-                ));
-                item.set(DataComponents.LORE, lore);
-                Pocket_storage.LOGGER.debug("clone: set id {}", node.getId());
-                return item;
+                id = node.getId();
             }
         }
-        Pocket_storage.LOGGER.debug("clone: plain item");
-        return new ItemStack(this);
+        return PocketChestBlock.getChestItem(id);
     }
 
     @Override

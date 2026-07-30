@@ -116,6 +116,10 @@ public class RegionStorage extends SavedData {
         return node;
     }
 
+    public Set<UUID> getNodeIds() {
+        return nodesDataMap.keySet();
+    }
+
     public void deleteNode(UUID id) {
         StorageNodeData data = nodesDataMap.get(id);
         if(data != null) {
