@@ -140,9 +140,18 @@ public class PocketChestBlock extends Block implements EntityBlock {
                         return;
                     }
                 } else {
-                    node = store.createNode(player, RegionStorage.TEMPLATE_ROOM_20x20x20_PLAIN);
+                    try {
+                        node = store.createNode(player, RegionStorage.TEMPLATE_ROOM_20x20x20_PLAIN);
+                    } catch(Exception e) {
+                        player.sendSystemMessage(
+                            Component.literal("Unable to create room: ")
+                                .append(e.toString())
+                                .withColor(Color.RED.getRGB())
+                        );
+                        return;
+                    }
                 }
-                ent.setNode(node);
+                if(node != null) ent.setNode(node);
             }
         }
         super.setPlacedBy(worldIn, pos, state, placer, stack);
