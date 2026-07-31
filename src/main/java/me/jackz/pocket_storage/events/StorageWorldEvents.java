@@ -17,6 +17,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.MobSpawnEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class StorageWorldEvents {
     private static void onDisconnect(PlayerEvent.PlayerLoggedOutEvent event) {
         // Restore player back to position outside of storage world on quit
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if(player.level().dimension() ==  RegistryDims.STORAGE_DIM) {
+        if(player.level().dimension() == RegistryDims.STORAGE_DIM) {
             StorageNode.restorePlayer(player);
         }
     }
@@ -61,7 +62,7 @@ public class StorageWorldEvents {
         RegionStorage store = RegionStorage.get(voidLevel);
         List<ServerPlayer> players = new ArrayList<>(voidLevel.players());
         for (ServerPlayer player : players) {
-            if(player.getY() < 0) {
+            if(player.getY() <= 0) {
                 voidLevel.getServer().execute(() -> {
                     StorageNode.restorePlayer(player);
                 });
