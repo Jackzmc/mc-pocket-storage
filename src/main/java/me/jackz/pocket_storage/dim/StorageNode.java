@@ -163,7 +163,11 @@ public class StorageNode {
         if(!applyRoomTemplate(template, level, data.cornerPos)) {
             Pocket_storage.LOGGER.warn("Failed to apply room template");
         }
+        Vec3i size = template.getSize();
 
+        BlockState wallBlock = Blocks.BEDROCK.defaultBlockState();
+        buildBox(level, data.cornerPos, size.getX() + 2, size.getY() + 2, size.getZ() + 2, wallBlock, null);
+        LOGGER.debug("bedbox corner={} size={}", data.cornerPos, size.offset(1, 1, 1));
 //        BlockState lightBlock = Blocks.TORCH.defaultBlockState();
 //        level.setBlock(btmCenter.east(), lightBlock, Block.UPDATE_NONE);
 //        level.setBlock(btmCenter.west(), lightBlock, Block.UPDATE_NONE);
@@ -182,9 +186,8 @@ public class StorageNode {
                 .setIgnoreEntities(true);
 //                .setKnownShape(true);
 
-        BlockState wallBlock = Blocks.BEDROCK.defaultBlockState();
         BlockPos innerOrigin = new BlockPos(origin.getX() + 1, origin.getY() + 1, origin.getZ() + 1);
-        buildBox(level, origin, size.getX() + 1, size.getY() + 1, size.getZ() + 1, wallBlock, null);
+        LOGGER.debug("innerOrigin={} SIZE={}", innerOrigin, size);
         return template.placeInWorld(level, innerOrigin, innerOrigin, settings, level.getRandom(), Block.UPDATE_CLIENTS);
     }
 
