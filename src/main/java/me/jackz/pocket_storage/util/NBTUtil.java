@@ -53,6 +53,6 @@ public class NBTUtil {
     }
 
     public static ListTag putBlockPos(CompoundTag tag, String key, BlockPos pos) {
-        return putVec3(tag, key, pos.getCenter());
+        return putVec3i(tag, key, pos);
     }
 }

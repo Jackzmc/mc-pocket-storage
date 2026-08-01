@@ -3,6 +3,6 @@ x on break, drop with node ID (w/ glint)
 x   WORKS in survival only
 x cmd /pocket chest <id>
 - restore ang too
-- getSafeSpawn doesnt work (clip into floor, AND doesnt tp to top of stack of blocks)
+x getSafeSpawn doesnt work (clip into floor, AND doesnt tp to top of stack of blocks)
 x structure bedrock walls doesnt work in other corner, not adapting to struct
 - disconnect/shutdown doesnt seem to make player exit all the time

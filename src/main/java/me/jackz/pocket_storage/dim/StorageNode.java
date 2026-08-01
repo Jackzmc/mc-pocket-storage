@@ -94,7 +94,7 @@ public class StorageNode {
             attach.dim = ServerLevel.OVERWORLD;
         }
         Pocket_storage.LOGGER.debug("dim set to {}", attach.dim);
-        Pocket_storage.LOGGER.debug("stored last loc {}", attach);
+        Pocket_storage.LOGGER.debug("stored last loc {}, ang {}", attach.lastPos, attach.lastAng);
         player.setData(RegistryAttachmentTypes.LAST_LOCATION, attach);
         player.setData(RegistryAttachmentTypes.NODE_ID, this.getId());
 

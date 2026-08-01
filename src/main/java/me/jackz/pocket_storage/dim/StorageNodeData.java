@@ -31,6 +31,7 @@ public class StorageNodeData {
 
     public CompoundTag serialize() {
         CompoundTag tag = new CompoundTag();
+        tag.putUUID("id", id);
         tag.putUUID("ownerUUID", ownerUUID);
         NBTUtil.putBlockPos(tag, "origin", cornerPos);
         tag.putString("template", templateId.toString());

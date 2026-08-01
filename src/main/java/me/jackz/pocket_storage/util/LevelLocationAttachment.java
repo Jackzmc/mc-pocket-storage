@@ -72,7 +72,7 @@ public class LevelLocationAttachment {
             tag.putString("dim", att.dim.location().toString());
             NBTUtil.putVec3(tag, "pos", att.lastPos.getCenter());
             NBTUtil.putVec3(tag, "ang", att.lastAng);
-            Pocket_storage.LOGGER.debug("saving pos={} {}", att.lastPos, att.lastPos.getCenter());
+            Pocket_storage.LOGGER.debug("saving pos={} ang={}", att.lastPos, att.lastAng);
             return tag;
         }
     }
