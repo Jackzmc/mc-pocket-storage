@@ -1,5 +1,6 @@
 package me.jackz.pocket_storage.blocks;
 
+import me.jackz.pocket_storage.Config;
 import me.jackz.pocket_storage.Pocket_storage;
 import me.jackz.pocket_storage.dim.RegionStorage;
 import me.jackz.pocket_storage.dim.StorageNode;
@@ -141,7 +142,7 @@ public class PocketChestBlock extends Block implements EntityBlock {
                     }
                 } else {
                     try {
-                        node = store.createNode(player, RegionStorage.TEMPLATE_ROOM_20x20x20_PLAIN);
+                        node = store.createNode(player, Config.DefaultStructureTemplate);
                     } catch(Exception e) {
                         player.sendSystemMessage(
                             Component.literal("Unable to create room: ")
