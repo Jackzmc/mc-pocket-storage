@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
@@ -103,7 +104,7 @@ public class StorageNode {
         player.sendSystemMessage(Component.literal("Sneak near the center to exit"));
     }
 
-    public Vec3 findSafeSpawn(ServerPlayer player) {
+    private Vec3 findSafeSpawn(ServerPlayer player) {
         ServerLevel level = player.getServer().getLevel(RegistryDims.STORAGE_DIM);
         BlockPos.MutableBlockPos cursor = getBlockBottomCenter().mutable();
         if(level == null) return cursor.getCenter();
@@ -111,19 +112,11 @@ public class StorageNode {
         int yMax = yMin + getSize().getY();
         for (int y = yMax - 1; y > yMin; y--) {
             cursor.setY(y);
-            BlockState block = level.getBlockState(cursor);
-//            LOGGER.debug("block={} cursor={} can={} tpTo={}", block, cursor, block.entityCanStandOn(level, cursor, player), cursor.above());
-//            if(block.entityCanStandOn(level, cursor, player)) {
-//                return cursor.above().getCenter();
-//            }
+            if(!level.isInWorldBounds(cursor)) continue;
             Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y, cursor.getZ() + 0.5);
-            AABB playerBox = player.getDimensions(Pose.STANDING).makeBoundingBox(feetPos);
-            if (level.noCollision(playerBox)) {
-                // Check there's something to stand on below
-                cursor.below();
-                if (!level.getBlockState(cursor).getCollisionShape(level, cursor).isEmpty()) {
-                    return feetPos;
-                }
+            // Check there's something to stand on below
+            if (!level.getBlockState(cursor).getCollisionShape(level, cursor).isEmpty()) {
+                return feetPos.add(0, 1, 0);
             }
         }
         return new Vec3(cursor.getX() + 0.5, yMin + 1, cursor.getZ() + 0.5);
