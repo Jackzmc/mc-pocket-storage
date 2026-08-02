@@ -1,5 +1,6 @@
 package me.jackz.pocket_storage.blocks;
 
+import com.mojang.serialization.MapCodec;
 import me.jackz.pocket_storage.Config;
 import me.jackz.pocket_storage.Pocket_storage;
 import me.jackz.pocket_storage.dim.RegionStorage;
@@ -8,6 +9,7 @@ import me.jackz.pocket_storage.registry.RegistryComponents;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.registry.RegistryItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -21,18 +23,25 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.phys.BlockHitResult;
 
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,12 +50,42 @@ import java.awt.*;
 import java.util.List;
 import java.util.UUID;
 
-public class PocketChestBlock extends Block implements EntityBlock {
+import static net.minecraft.core.Direction.NORTH;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.EYE;
+
+public class PocketChestBlock extends HorizontalDirectionalBlock implements EntityBlock {
+    public static final DirectionProperty FACING = BlockStateProperties.FACING;
+    private static final VoxelShape SHAPE = Block.box(2.0D, 0.0D, 3.0D, 14.0D, 11.0D, 13.0D);
+    public static final MapCodec<PocketChestBlock> CODEC = simpleCodec(p -> new PocketChestBlock(p));
+
     public PocketChestBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState());
+        registerDefaultState(defaultBlockState()
+            .setValue(FACING, NORTH)
+        );
 
 //        registerDefaultState(defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false));
+    }
+
+    @Override
+    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
+        pBuilder.add(FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return super.getStateForPlacement(context)
+            .setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
+        return SHAPE;
     }
 
     // TODO: move to diff method for survival to work
@@ -111,6 +150,7 @@ public class PocketChestBlock extends Block implements EntityBlock {
     @Override
     @NotNull
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+        if(level.isClientSide()) return PocketChestBlock.getChestItem(null);
         UUID id = null;
         PocketChestBlockEntity blockEntity = getBlockEntity(level, pos);
         if(blockEntity != null) {

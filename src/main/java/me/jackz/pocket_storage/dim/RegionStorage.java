@@ -85,7 +85,7 @@ public class RegionStorage extends SavedData {
             entry.putUUID("ownerUUID", e.getKey());
             entry.put("nodeIds", nodeList);
 
-            list.add(entry);
+            playerList.add(entry);
         }
         tag.put("player_owned_regions", playerList);
         tag.putLong("next_pos", nextPos.asLong());
