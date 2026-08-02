@@ -2,6 +2,7 @@ package me.jackz.pocket_storage.cmd;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import me.jackz.pocket_storage.blocks.PocketChestBlock;
 import me.jackz.pocket_storage.dim.RegionStorage;
@@ -19,11 +20,13 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static me.jackz.pocket_storage.Pocket_storage.MODID;
+import static net.minecraft.commands.Commands.literal;
 import static net.minecraft.commands.arguments.UuidArgument.getUuid;
 import static net.minecraft.commands.arguments.UuidArgument.uuid;
 
@@ -50,9 +53,14 @@ public class CmdRegister {
     };
 
     private static LiteralArgumentBuilder<CommandSourceStack> build() {
-        return Commands.literal("pocket")
-        .then(Commands.literal("chest")
-            .executes(ctx -> giveChest(ctx.getSource(), ctx.getSource().getPlayer(), null))  // /pocket chest (no uuid)
+        return literal("pocket")
+        .then(literal("nodes")
+            .then(literal("list")
+                .executes(ctx -> listNodes(ctx.getSource()))))
+        .then(literal("chest")
+            .then(literal("new")
+                .executes(ctx -> giveChest(ctx.getSource(), ctx.getSource().getPlayer(), null))
+            )
             .then(Commands.argument("id", uuid())
                 .suggests(NODE_IDS)
                 .executes(ctx -> giveChest(ctx.getSource(), ctx.getSource().getPlayer(), getUuid(ctx, "id"))))
@@ -76,5 +84,17 @@ public class CmdRegister {
             source.sendFailure(Component.literal("Player not found").withColor(Color.RED.getRGB()));
             return -1;
         }
+    }
+
+    private static int listNodes(CommandSourceStack source) {
+        RegionStorage store = RegionStorage.get(source.getLevel());
+        Set<UUID> ids = store.getNodeIds();
+        if(ids.isEmpty()) {
+            source.sendSystemMessage(Component.literal("No nodes found").withColor(Color.RED.getRGB()));
+        }
+        for(UUID id : ids) {
+            source.sendSystemMessage(Component.literal(id.toString()));
+        }
+        return 1;
     }
 }
