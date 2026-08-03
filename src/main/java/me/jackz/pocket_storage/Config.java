@@ -18,9 +18,10 @@ import static me.jackz.pocket_storage.Pocket_storage.MODID;
 public class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
+    private static final String DEFAULT_TEMPLATE = "13x11x13_plain";
     public static final ModConfigSpec.ConfigValue<String> DEFAULT_STRUCTURE_TEMPLATE = BUILDER
             .comment("Name of the structure to use as the template for the pocket chest")
-            .define("structure_template", String.format("%s:20x20x20_plain", MODID));
+            .define("structure_template", String.format("%s:%s", MODID, DEFAULT_TEMPLATE));
 
     public static ResourceLocation DefaultStructureTemplate;
 

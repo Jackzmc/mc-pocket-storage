@@ -91,6 +91,8 @@ public class CmdRegister {
         Set<UUID> ids = store.getNodeIds();
         if(ids.isEmpty()) {
             source.sendSystemMessage(Component.literal("No nodes found").withColor(Color.RED.getRGB()));
+        } else {
+            source.sendSystemMessage(Component.literal("Found " + ids.size() + " nodes").withColor(Color.GREEN.getRGB()));
         }
         for(UUID id : ids) {
             source.sendSystemMessage(Component.literal(id.toString()));
