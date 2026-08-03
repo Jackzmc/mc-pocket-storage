@@ -4,8 +4,10 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import me.jackz.pocket_storage.Config;
 import me.jackz.pocket_storage.blocks.PocketChestBlock;
 import me.jackz.pocket_storage.dim.RegionStorage;
+import me.jackz.pocket_storage.dim.StorageNode;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -56,7 +58,10 @@ public class CmdRegister {
         return literal("pocket")
         .then(literal("nodes")
             .then(literal("list")
-                .executes(ctx -> listNodes(ctx.getSource()))))
+                .executes(ctx -> listNodes(ctx.getSource())))
+            .then(literal("create")
+                .executes(ctx -> createNode(ctx.getSource())))
+        )
         .then(literal("chest")
             .then(literal("new")
                 .executes(ctx -> giveChest(ctx.getSource(), ctx.getSource().getPlayer(), null))
@@ -84,6 +89,18 @@ public class CmdRegister {
             source.sendFailure(Component.literal("Player not found").withColor(Color.RED.getRGB()));
             return -1;
         }
+    }
+
+    private static int createNode(CommandSourceStack source) {
+        RegionStorage store = RegionStorage.get(source.getLevel());
+        if(!source.isPlayer()) {
+            source.sendFailure(Component.literal("Player not found").withColor(Color.RED.getRGB()));
+            return -1;
+        }
+        StorageNode node = store.createNode(source.getPlayer(), Config.DefaultStructureTemplate);
+        source.sendSystemMessage(Component.literal("Node: ").append(node.getId().toString()));
+        source.sendSystemMessage(Component.literal("Corner: ").append(node.getCorner().toShortString()));
+        return 1;
     }
 
     private static int listNodes(CommandSourceStack source) {

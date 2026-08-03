@@ -12,7 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -21,10 +20,9 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 import static me.jackz.pocket_storage.Pocket_storage.LOGGER;
-import static me.jackz.pocket_storage.Pocket_storage.MODID;
 
 public class RegionStorage extends SavedData {
-    public static final int DISTANCE_BETWEEN = 100;
+    public static final int DISTANCE_BETWEEN_NODES = 100;
 
     private final Map<UUID, StorageNodeData> nodesDataMap = new HashMap<>();
     private final Map<UUID, Set<UUID>> playerNodesMap = new HashMap<>();
@@ -92,11 +90,17 @@ public class RegionStorage extends SavedData {
         return tag;
     }
 
+    private static final int REGION_BLOCKS = 512;
+    private static final int REGION_BLOCKS_HALF = REGION_BLOCKS / 2;
+
     private BlockPos advanceNextPosition() {
-        int x = nextPos != null ? nextPos.getX() : 0;
+        int x = nextPos != null ? nextPos.getX() : -REGION_BLOCKS_HALF;
         int z = nextPos != null ? nextPos.getZ() : 0;
-        // TODO: make this grid instead of linear line
-        nextPos = new BlockPos(x + DISTANCE_BETWEEN, 64, z);
+        nextPos = new BlockPos(x + DISTANCE_BETWEEN_NODES, 64, z);
+        // Check for overflow on X, then jump value of Z
+        if(nextPos.getX() >= REGION_BLOCKS_HALF) {
+            nextPos = new BlockPos(-REGION_BLOCKS_HALF, 64, z + DISTANCE_BETWEEN_NODES);
+        }
         return nextPos;
     }
 
