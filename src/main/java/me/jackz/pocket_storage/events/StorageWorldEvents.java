@@ -4,12 +4,14 @@ import me.jackz.pocket_storage.dim.RegionStorage;
 import me.jackz.pocket_storage.dim.StorageNode;
 import me.jackz.pocket_storage.registry.RegistryBlocks;
 import me.jackz.pocket_storage.registry.RegistryDims;
+import me.jackz.pocket_storage.registry.RegistryItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -63,23 +65,22 @@ public class StorageWorldEvents {
         List<ServerPlayer> players = new ArrayList<>(voidLevel.players());
         for (ServerPlayer player : players) {
             if(player.getY() <= 0) {
-                voidLevel.getServer().execute(() -> {
-                    StorageNode.restorePlayer(player);
-                });
+                voidLevel.getServer().execute(() -> StorageNode.restorePlayer(player));
                 continue;
             }
-            if (!player.isShiftKeyDown() || !player.onGround()) continue;
-            // Require to stand still, mostly to reduce multiple calls
-            if (player.getDeltaMovement().lengthSqr() > 0.01) continue;
-            // 3. In the target region?
-            BlockPos pos = player.blockPosition();
-            // TODO: impl check for specific center region
-            StorageNode node = store.getActiveNode(player);
-            if(node != null) {
-                if(pos.distSqr(node.getBlockBottomCenter()) < 8f) {
-                    voidLevel.getServer().execute(() -> {
-                        StorageNode.restorePlayer(player);
-                    });
+            if (!player.isShiftKeyDown()) continue;
+            ItemStack heldItem = player.getMainHandItem();
+            // Check if player is either holding pocket tool OR touching ground and not moving
+            if(heldItem.getItem() == RegistryItems.POCKET_TOOL.get()) {
+                voidLevel.getServer().execute(() -> StorageNode.restorePlayer(player));
+            } else if(player.onGround() && player.getDeltaMovement().lengthSqr() <= 0.01) {
+                BlockPos pos = player.blockPosition();
+                // TODO: impl check for specific center region
+                StorageNode node = store.getActiveNode(player);
+                if (node != null) {
+                    if (pos.distSqr(node.getBlockBottomCenter()) < 8f) {
+                        voidLevel.getServer().execute(() -> StorageNode.restorePlayer(player));
+                    }
                 }
             }
         }
