@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -178,6 +179,17 @@ public class RegionStorage extends SavedData {
             UUID id = player.getData(RegistryAttachmentTypes.NODE_ID);
             return getNode(id);
         }
+        if(player.level().dimension() == RegistryDims.STORAGE_DIM) {
+            LOGGER.debug("Player has no marked node, but is in storage dimension. Scanning.");
+            Vec3 pos = player.getEyePosition();
+            for(Map.Entry<UUID, StorageNodeData> entry : nodesDataMap.entrySet()) {
+                StorageNode node = StorageNode.fromData(entry.getValue());
+                if(node.isVecInNode(pos)) {
+                    return node;
+                }
+            }
+        }
+        // TODO: fall back to scan
         return null;
     }
 

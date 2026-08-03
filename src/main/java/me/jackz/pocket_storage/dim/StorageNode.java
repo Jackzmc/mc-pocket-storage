@@ -5,6 +5,7 @@ import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
 import me.jackz.pocket_storage.registry.RegistryBlocks;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.util.LevelLocationAttachment;
+import me.jackz.pocket_storage.util.TextUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -50,15 +51,16 @@ public class StorageNode {
 
     public static void inspectNode(CommandSourceStack source, @Nullable StorageNode node) {
         if(node != null) {
-            source.sendSystemMessage(Component.literal("Node ID: ").append(node.getId().toString()));
-            source.sendSystemMessage(Component.literal("Owner UUID: ").append(node.getOwnerId().toString()));
-            source.sendSystemMessage(Component.literal("Center Pos: ").append(node.getBlockCenter().toShortString()));
-            source.sendSystemMessage(Component.literal("Corner Pos: ").append(node.getCorner().toShortString()));
-            source.sendSystemMessage(Component.literal("Size: ").append(node.getSize().toShortString()));
+            TextUtil.sendKeyValueComponent(source, "Node ID", node.getId().toString());
+            TextUtil.sendKeyValueComponent(source, "Owner UUID", node.getOwnerId().toString());
+            TextUtil.sendKeyValueComponent(source, "Center Pos", node.getBlockCenter().toShortString());
+            TextUtil.sendKeyValueComponent(source, "Corner Pos", node.getCorner().toShortString());
+            TextUtil.sendKeyValueComponent(source, "Size", node.getSize().toShortString());
         } else {
             source.sendSystemMessage(Component.literal("No node was found").withColor(Color.RED.getRGB()));
         }
     }
+
     public static void inspectNode(ServerPlayer player, @Nullable StorageNode node) {
         inspectNode(player.createCommandSourceStack(), node);
     }
@@ -67,6 +69,29 @@ public class StorageNode {
         return data;
     }
 
+    /**
+     * Check if a given position is inside the node. Ignores Y position
+     * @param pos the position
+     * @return true if within bounds, false if not
+     */
+    public boolean isVecInNode(Vec3 pos) {
+        BlockPos opposite = getOppositeCorner();
+        // We ignore Y-height, just check horizontal
+        return pos.x >= data.cornerPos.getX()
+                && pos.z >= data.cornerPos.getZ()
+                && pos.x <= opposite.getX()
+                && pos.z <= opposite.getZ();
+    }
+
+    /**
+     * Creates a new node at the specific corner, applying the supplied template
+     * @param nodeId id of the node
+     * @param level world to create in
+     * @param owner player who owns the node
+     * @param templateId ID of the template to apply and calculate size from
+     * @param cornerPos origin point, template applied towards +x +z
+     * @return the new storage node
+     */
     public static StorageNode create(UUID nodeId, ServerLevel level, ServerPlayer owner, ResourceLocation templateId, BlockPos cornerPos) {
         StructureTemplate template = RegionStorage.resolveTemplate(level, templateId);
         if(template == null) throw new IllegalArgumentException("template could not be resolved");
@@ -84,6 +109,15 @@ public class StorageNode {
     public BlockPos getCorner() {
         return data.cornerPos;
     }
+
+    /**
+     * Returns the opposite corner of box, with the highest Y height
+     */
+    public BlockPos getOppositeCorner() {
+        Vec3i size = getSize();
+        return data.cornerPos.offset(size.getX(), size.getY(), size.getZ());
+    }
+
 
     public BlockPos getBlockCenter() {
         return getBlockBottomCenter().relative(Direction.UP, getSize().getY() / 2);
