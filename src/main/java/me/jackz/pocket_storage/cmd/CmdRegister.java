@@ -11,6 +11,7 @@ import me.jackz.pocket_storage.dim.StorageNode;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -74,7 +75,10 @@ public class CmdRegister {
                 )
             )
             .then(literal("create")
-                .executes(ctx -> createNode(ctx.getSource())))
+                .executes(ctx -> createNode(ctx.getSource(), null)))
+                .then(Commands.argument("template", string())
+                        .executes(ctx -> createNode(ctx.getSource(), getString(ctx, "template")))
+                )
             .then(literal("enter")
                 .then(argument("nodeid", uuid())
                     .suggests(NODE_IDS)
@@ -118,13 +122,19 @@ public class CmdRegister {
         }
     }
 
-    private static int createNode(CommandSourceStack source) {
+    private static int createNode(CommandSourceStack source, @Nullable String templateId) {
         RegionStorage store = RegionStorage.get(source.getLevel());
         if(!source.isPlayer()) {
             source.sendFailure(Component.literal("Must be a player").withColor(Color.RED.getRGB()));
             return -1;
         }
-        StorageNode node = store.createNode(source.getPlayer(), Config.DefaultStructureTemplate);
+        ResourceLocation template;
+        if(templateId != null) {
+            template = ResourceLocation.parse(templateId);
+        } else {
+            template = Config.DefaultStructureTemplate;
+        }
+        StorageNode node = store.createNode(source.getPlayer(), template);
         source.sendSystemMessage(Component.literal("Node: ").append(node.getId().toString()));
         source.sendSystemMessage(Component.literal("Corner: ").append(node.getCorner().toShortString()));
         return 1;
