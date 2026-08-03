@@ -1,7 +1,6 @@
 {
 	"parent": "minecraft:item/handheld",
 	"textures": {
-		"rod": "minecraft:item/stick",
-		"cube": "minecraft:block/obsidian"
+		"layer0": "pocket_storage:item/pocket_tool"
 	}
 }
