@@ -5,6 +5,7 @@ import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
 import me.jackz.pocket_storage.registry.RegistryBlocks;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.util.LevelLocationAttachment;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -25,7 +26,10 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.apache.logging.log4j.core.jmx.Server;
+import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,6 +46,21 @@ public class StorageNode {
 
     public static StorageNode fromData(StorageNodeData data) {
         return new StorageNode(data);
+    }
+
+    public static void inspectNode(CommandSourceStack source, @Nullable StorageNode node) {
+        if(node != null) {
+            source.sendSystemMessage(Component.literal("Node ID: ").append(node.getId().toString()));
+            source.sendSystemMessage(Component.literal("Owner UUID: ").append(node.getOwnerId().toString()));
+            source.sendSystemMessage(Component.literal("Center Pos: ").append(node.getBlockCenter().toShortString()));
+            source.sendSystemMessage(Component.literal("Corner Pos: ").append(node.getCorner().toShortString()));
+            source.sendSystemMessage(Component.literal("Size: ").append(node.getSize().toShortString()));
+        } else {
+            source.sendSystemMessage(Component.literal("No node was found").withColor(Color.RED.getRGB()));
+        }
+    }
+    public static void inspectNode(ServerPlayer player, @Nullable StorageNode node) {
+        inspectNode(player.createCommandSourceStack(), node);
     }
 
     public StorageNodeData getData() {

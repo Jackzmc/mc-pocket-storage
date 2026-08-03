@@ -9,7 +9,6 @@ import me.jackz.pocket_storage.registry.RegistryComponents;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.registry.RegistryItems;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -51,7 +50,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static net.minecraft.core.Direction.NORTH;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.EYE;
 
 public class PocketChestBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
@@ -223,15 +221,7 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
                 RegionStorage store = RegionStorage.get((ServerLevel) level);
                 StorageNode node = store.getNode(ent.getNodeId());
                 if(isUsingTool) {
-                    if(node != null) {
-                        sp.sendSystemMessage(Component.literal("Node ID: ").append(node.getId().toString()));
-                        sp.sendSystemMessage(Component.literal("Owner UUID: ").append(node.getOwnerId().toString()));
-                        sp.sendSystemMessage(Component.literal("Center Pos: ").append(node.getBlockCenter().toShortString()));
-                        sp.sendSystemMessage(Component.literal("Corner Pos: ").append(node.getCorner().toShortString()));
-                        sp.sendSystemMessage(Component.literal("Size: ").append(node.getSize().toShortString()));
-                    } else {
-                        sp.sendSystemMessage(Component.literal("No node attached").withColor(Color.RED.getRGB()));
-                    }
+                    StorageNode.inspectNode(sp, node);
                 } else if(node != null) {
                     Pocket_storage.LOGGER.debug("node {}. teleporting", node.getId());
                     node.teleportPlayerTo(sp);

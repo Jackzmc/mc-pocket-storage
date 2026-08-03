@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.saveddata.SavedData;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -51,7 +52,9 @@ public class RegionStorage extends SavedData {
             CompoundTag entry = list.getCompound(i);
             StorageNodeData nodeData = StorageNodeData.deserialize(entry);
             storage.nodesDataMap.put(nodeData.id, nodeData);
-            // Track owners' ids:
+
+            // Track owners' ids
+            // Create initial set
             if(!storage.playerNodesMap.containsKey(nodeData.ownerUUID)) {
                 storage.playerNodesMap.put(nodeData.ownerUUID, new HashSet<>());
             }
@@ -78,6 +81,7 @@ public class RegionStorage extends SavedData {
             for(UUID uuid : e.getValue()) {
                 CompoundTag node = new CompoundTag();
                 node.putUUID("id", uuid);
+                nodeList.add(node);
             }
 
             entry.putUUID("ownerUUID", e.getKey());
@@ -104,7 +108,7 @@ public class RegionStorage extends SavedData {
         return nextPos;
     }
 
-    public StorageNode createNode(ServerPlayer ownerPlayer, ResourceLocation templateId) {
+    public StorageNode createNode(@NotNull ServerPlayer ownerPlayer, ResourceLocation templateId) {
         BlockPos nextPos = advanceNextPosition();
         ServerLevel dim = getStorageLevel(ownerPlayer.getServer());
 
@@ -121,6 +125,10 @@ public class RegionStorage extends SavedData {
 
     public Set<UUID> getNodeIds() {
         return nodesDataMap.keySet();
+    }
+
+    public Set<UUID> getNodeIdsForPlayer(UUID id) {
+        return playerNodesMap.get(id);
     }
 
     public void deleteNode(UUID id) {

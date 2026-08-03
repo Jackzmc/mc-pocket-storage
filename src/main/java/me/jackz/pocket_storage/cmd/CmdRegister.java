@@ -28,6 +28,7 @@ import java.util.UUID;
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static me.jackz.pocket_storage.Pocket_storage.MODID;
+import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 import static net.minecraft.commands.arguments.UuidArgument.getUuid;
 import static net.minecraft.commands.arguments.UuidArgument.uuid;
@@ -58,9 +59,35 @@ public class CmdRegister {
         return literal("pocket")
         .then(literal("nodes")
             .then(literal("list")
-                .executes(ctx -> listNodes(ctx.getSource())))
+                .executes(ctx -> listNodes(ctx.getSource()))
+                .then(Commands.argument("player", string())
+                        .suggests(PLAYER_NAMES)
+                        .executes(ctx -> {
+                            MinecraftServer server = ctx.getSource().getLevel().getServer();
+                            ServerPlayer player = server.getPlayerList().getPlayerByName(getString(ctx, "player"));
+                            if(player == null) {
+                                ctx.getSource().sendFailure(Component.literal("No player found").withColor(Color.RED.getRGB()));
+                                return -1;
+                            }
+                            return listNodesForPlayer(ctx.getSource(), player.getUUID());
+                        })
+                )
+            )
             .then(literal("create")
                 .executes(ctx -> createNode(ctx.getSource())))
+            .then(literal("enter")
+                .then(argument("nodeid", uuid())
+                    .suggests(NODE_IDS)
+                    .executes(ctx -> enterNode(ctx.getSource(), getUuid(ctx, "nodeid")))
+                )
+            )
+            .then(literal("info")
+                .executes(ctx -> infoNode(ctx.getSource(), null))
+                .then(argument("nodeid", uuid())
+                    .suggests(NODE_IDS)
+                    .executes(ctx -> infoNode(ctx.getSource(), getUuid(ctx, "nodeid")))
+                )
+            )
         )
         .then(literal("chest")
             .then(literal("new")
@@ -94,7 +121,7 @@ public class CmdRegister {
     private static int createNode(CommandSourceStack source) {
         RegionStorage store = RegionStorage.get(source.getLevel());
         if(!source.isPlayer()) {
-            source.sendFailure(Component.literal("Player not found").withColor(Color.RED.getRGB()));
+            source.sendFailure(Component.literal("Must be a player").withColor(Color.RED.getRGB()));
             return -1;
         }
         StorageNode node = store.createNode(source.getPlayer(), Config.DefaultStructureTemplate);
@@ -103,13 +130,62 @@ public class CmdRegister {
         return 1;
     }
 
+    private static int enterNode(CommandSourceStack source, UUID nodeId) {
+        RegionStorage store = RegionStorage.get(source.getLevel());
+        if(!source.isPlayer()) {
+            source.sendFailure(Component.literal("Must be a player").withColor(Color.RED.getRGB()));
+            return -1;
+        }
+        StorageNode node = store.getNode(nodeId);
+        if(node == null) {
+            source.sendFailure(Component.literal("No node found with id").withColor(Color.RED.getRGB()));
+            return -2;
+        }
+        node.teleportPlayerTo(source.getPlayer());
+        return 1;
+    }
+
+    private static int infoNode(CommandSourceStack source, @Nullable UUID nodeId) {
+        RegionStorage store = RegionStorage.get(source.getLevel());
+        StorageNode node;
+
+        if(nodeId != null) {
+            node = store.getNode(nodeId);
+        } else if(source.isPlayer()) {
+            node = store.getActiveNode(source.getPlayer());
+            if(node == null) {
+                source.sendFailure(Component.literal("You are not in a node").withColor(Color.RED.getRGB()));
+                return -1;
+            }
+        } else {
+            source.sendFailure(Component.literal("Must be a player").withColor(Color.RED.getRGB()));
+            return -1;
+        }
+        StorageNode.inspectNode(source, node);
+        return 1;
+    }
+
     private static int listNodes(CommandSourceStack source) {
         RegionStorage store = RegionStorage.get(source.getLevel());
         Set<UUID> ids = store.getNodeIds();
         if(ids.isEmpty()) {
-            source.sendSystemMessage(Component.literal("No nodes found").withColor(Color.RED.getRGB()));
+            source.sendSystemMessage(Component.literal("No nodes exist").withColor(Color.RED.getRGB()));
         } else {
             source.sendSystemMessage(Component.literal("Found " + ids.size() + " nodes").withColor(Color.GREEN.getRGB()));
+        }
+        for(UUID id : ids) {
+            source.sendSystemMessage(Component.literal(id.toString()));
+        }
+        return 1;
+    }
+
+    private static int listNodesForPlayer(CommandSourceStack source, UUID playerId) {
+        RegionStorage store = RegionStorage.get(source.getLevel());
+        Set<UUID> ids = store.getNodeIdsForPlayer(playerId);
+        if(ids.isEmpty()) {
+            source.sendSystemMessage(Component.literal("No nodes found for player").withColor(Color.RED.getRGB()));
+        } else {
+            source.sendSystemMessage(Component.literal("Player has " + ids.size() + " nodes").withColor(Color.GREEN.getRGB()));
         }
         for(UUID id : ids) {
             source.sendSystemMessage(Component.literal(id.toString()));
