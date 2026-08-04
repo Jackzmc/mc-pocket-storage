@@ -17,11 +17,10 @@ public class RegistryBlocks {
     public static final DeferredBlock<Block> POCKET_CHEST = REGISTER.registerBlock(
             "pocket_chest",
             (props) -> new PocketChestBlock(props
-                    .mapColor(MapColor.WOOD)
-                    .destroyTime(4.0f)
-                    .explosionResistance(1000.0f)
+                    .destroyTime(2.0f)
+                    .explosionResistance(1100.0f)
                     .noOcclusion()
-                    .sound(SoundType.WOOD)
+                    .sound(SoundType.EMPTY)
                     .isValidSpawn((blk, get, pos, type) -> false)
             )
     );

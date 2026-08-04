@@ -37,7 +37,7 @@ public class StorageDimTransition {
         ServerLevel level = player.getServer().getLevel(ServerLevel.OVERWORLD);
         assert level != null: "overworld null";
         player.changeDimension(
-                new DimensionTransition(level, pos, Vec3.ZERO, 0, 0, DimensionTransition.DO_NOTHING)
+            new DimensionTransition(level, pos, Vec3.ZERO, 0, 0, DimensionTransition.DO_NOTHING)
         );
     }
 

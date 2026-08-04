@@ -2,7 +2,6 @@ package me.jackz.pocket_storage.dim;
 
 import me.jackz.pocket_storage.Pocket_storage;
 import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
-import me.jackz.pocket_storage.registry.RegistryBlocks;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.util.LevelLocationAttachment;
 import me.jackz.pocket_storage.util.TextUtil;
@@ -10,29 +9,21 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
-import org.apache.logging.log4j.core.jmx.Server;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.Optional;
 import java.util.UUID;
 
 import static me.jackz.pocket_storage.Pocket_storage.LOGGER;
@@ -40,11 +31,10 @@ import static me.jackz.pocket_storage.Pocket_storage.MODID;
 import static me.jackz.pocket_storage.util.Structure.buildBox;
 
 public class StorageNode {
-    private StorageNodeData data;
+    private final StorageNodeData data;
     private StorageNode(StorageNodeData data) {
         this.data = data;
     }
-
 
     public static StorageNode fromData(StorageNodeData data) {
         return new StorageNode(data);
@@ -56,7 +46,7 @@ public class StorageNode {
             TextUtil.sendKeyValueComponent(source, "Owner UUID", node.getOwnerId().toString());
             TextUtil.sendKeyValueComponent(source, "Center Pos", node.getBlockCenter().toShortString());
             TextUtil.sendKeyValueComponent(source, "Corner Pos", node.getCorner().toShortString());
-            TextUtil.sendKeyValueComponent(source, "Size", node.getSize().toShortString());
+            TextUtil.sendKeyValueComponent(source, "Size", node.getSizeString());
         } else {
             source.sendSystemMessage(Component.literal("No node was found").withColor(Color.RED.getRGB()));
         }
@@ -150,7 +140,7 @@ public class StorageNode {
         Pocket_storage.LOGGER.debug("dim set to {}", attach.dim);
         Pocket_storage.LOGGER.debug("stored last loc {}, ang {}", attach.lastPos, attach.lastAng);
         player.setData(RegistryAttachmentTypes.LAST_LOCATION, attach);
-        player.setData(RegistryAttachmentTypes.NODE_ID, this.getId());
+        player.setData(RegistryAttachmentTypes.ACTIVE_NODE_ID, this.getId());
 
         Vec3 pos = findSafeSpawn(player);
         StorageDimTransition.enterStorageDimension(player, pos);
@@ -177,8 +167,10 @@ public class StorageNode {
     }
 
     public static boolean restorePlayer(ServerPlayer player) {
+        if(player.level().dimension() != RegistryDims.STORAGE_DIM) return false;
+
         LevelLocationAttachment attachment = player.getData(RegistryAttachmentTypes.LAST_LOCATION);
-        player.removeData(RegistryAttachmentTypes.NODE_ID);
+        player.removeData(RegistryAttachmentTypes.ACTIVE_NODE_ID);
         if(attachment.dim == RegistryDims.STORAGE_DIM || !attachment.tryRestore(player)) {
             Pocket_storage.LOGGER.warn("No restore location found - using fallback");
             // Always ensure player leaves the storage world, by just putting them to their bed OR spawn
@@ -204,6 +196,9 @@ public class StorageNode {
 
     public Vec3i getSize() {
         return data.size;
+    }
+    public String getSizeString() {
+        return String.format("%dx%dx%d", data.size.getX(), data.size.getY(),  data.size.getZ());
     }
 
     protected void createStructure(ServerLevel level, StructureTemplate template) {

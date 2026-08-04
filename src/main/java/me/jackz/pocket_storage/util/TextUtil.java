@@ -4,10 +4,15 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.HoverEvent;
+
+import java.awt.*;
 
 public class TextUtil {
-    public static Component formatKeyValue(String key, String value) {
+    /**
+     * Returns a text component with %key%: %value%, where value is light gray, clickable to copy value to clipboard
+     */
+    public static Component formatKeyValueComponent(String key, String value) {
         Component valueComponent = Component.literal(value)
             .withStyle(style -> style
                     .withColor(ChatFormatting.GRAY)
@@ -15,13 +20,21 @@ public class TextUtil {
                             ClickEvent.Action.COPY_TO_CLIPBOARD,
                             value
                     ))
+                    .withHoverEvent(new HoverEvent(
+                            HoverEvent.Action.SHOW_TEXT,
+                            Component.literal("Click to copy")
+                    ))
             );
         return Component.literal(key)
                 .append(": ")
                 .append(valueComponent);
     }
 
+    /**
+     * Formats key value component and sends to player/source
+     * @param source command source / player
+     */
     public static void sendKeyValueComponent(CommandSourceStack source, String key, String value) {
-        source.sendSystemMessage(formatKeyValue(key, value));
+        source.sendSystemMessage(formatKeyValueComponent(key, value));
     }
 }

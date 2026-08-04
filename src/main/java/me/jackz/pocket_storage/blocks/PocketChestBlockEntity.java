@@ -16,7 +16,7 @@ import static me.jackz.pocket_storage.registry.RegistryBlockEntities.POCKET_CHES
 
 public class PocketChestBlockEntity extends BlockEntity {
     private @Nullable UUID nodeId;
-    private static final String TAG_NODE_ID = "nodeId";
+    private static final String TAG_NODE_ID = "node_id";
 
     public PocketChestBlockEntity(BlockPos pos, BlockState blockState) {
         super(POCKET_CHEST.get(), pos, blockState);

@@ -8,9 +8,11 @@ import me.jackz.pocket_storage.dim.StorageNode;
 import me.jackz.pocket_storage.registry.RegistryComponents;
 import me.jackz.pocket_storage.registry.RegistryDims;
 import me.jackz.pocket_storage.registry.RegistryItems;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -42,6 +44,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,7 +55,7 @@ import java.util.UUID;
 import static net.minecraft.core.Direction.NORTH;
 
 public class PocketChestBlock extends HorizontalDirectionalBlock implements EntityBlock {
-    public static final DirectionProperty FACING = BlockStateProperties.FACING;
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     private static final VoxelShape SHAPE = Block.box(2.0D, 0.0D, 3.0D, 14.0D, 11.0D, 13.0D);
     public static final MapCodec<PocketChestBlock> CODEC = simpleCodec(p -> new PocketChestBlock(p));
 
@@ -61,8 +64,6 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
         registerDefaultState(defaultBlockState()
             .setValue(FACING, NORTH)
         );
-
-//        registerDefaultState(defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false));
     }
 
     @Override
@@ -86,79 +87,43 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
         return SHAPE;
     }
 
-    // TODO: move to diff method for survival to work
-    @Override
-    public void attack(BlockState state, Level world, BlockPos pos, Player player) {
-        if (player instanceof FakePlayer)
-            return;
-        if (world.isClientSide)
-            return;
-        if (world instanceof ServerLevel) {
-            Pocket_storage.LOGGER.debug("popping");
-            ItemStack cloneItemStack = getCloneItemStack(world, pos, state);
-            world.destroyBlock(pos, false);
-            popResource(world, pos, cloneItemStack);
-        }
-    }
-
-    @Override
-    @NotNull
-    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        if (player instanceof FakePlayer) return null;
-        if (level.isClientSide) return null;
-        if (level instanceof ServerLevel) {
-            Pocket_storage.LOGGER.debug("popping");
-            ItemStack cloneItemStack = getCloneItemStack(level, pos, state);
-            level.destroyBlock(pos, false);
-            popResource(level, pos, cloneItemStack);
-            return state;
-        }
-        return null;
-    }
-
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
-        if (player instanceof FakePlayer) return false;
-        if (level.isClientSide) return false;
-        if (level instanceof ServerLevel) {
-            Pocket_storage.LOGGER.debug("popping");
-//            ItemStack cloneItemStack = getCloneItemStack(level, pos, state);
-//            level.destroyBlock(pos, false);
-//            popResource(level, pos, cloneItemStack);
-            return true;
+        // always drop item, even in creative:
+        if(!level.isClientSide) {
+            ItemStack cloneItemStack = getCloneItemStack(level, pos, state);
+            popResource(level, pos, cloneItemStack);
         }
-        return false;
+        return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
-    public static ItemStack getChestItem(@Nullable UUID nodeId) {
+    public static ItemStack getChestItem(@Nullable StorageNode node) {
         ItemStack item = new ItemStack(RegistryItems.POCKET_CHEST_ITEM.asItem());
-        if (nodeId != null) {
-            item.set(RegistryComponents.NODE_ID, nodeId.toString());
-
+        if (node != null) {
+            item.set(RegistryComponents.NODE_ID, node.getId().toString());
+            Style style = Style.EMPTY
+                    .withItalic(false)
+                    .withColor(ChatFormatting.GRAY);
             ItemLore lore = new ItemLore(List.of(
-                Component.literal("Node ").append(nodeId.toString())
+                Component.literal(node.getId().toString()).withStyle(style),
+                Component.literal(node.getSizeString()).withStyle(style)
             ));
             item.set(DataComponents.LORE, lore);
-            Pocket_storage.LOGGER.debug("clone: set id {}",nodeId);
         }
         return item;
     }
 
-    // TODO: static
     @Override
     @NotNull
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
         if(level.isClientSide()) return PocketChestBlock.getChestItem(null);
-        UUID id = null;
+        StorageNode node = null;
         PocketChestBlockEntity blockEntity = getBlockEntity(level, pos);
         if(blockEntity != null) {
             RegionStorage store = RegionStorage.get((ServerLevel) level);
-            StorageNode node = store.getNode(blockEntity.getNodeId());
-            if(node != null) {
-                id = node.getId();
-            }
+            node = store.getNode(blockEntity.getNodeId());
         }
-        return PocketChestBlock.getChestItem(id);
+        return PocketChestBlock.getChestItem(node);
     }
 
     @Override
@@ -173,12 +138,14 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
                 StorageNode node;
                 String id = stack.get(RegistryComponents.NODE_ID);
                 if(id != null) {
+                    // If item has a specific node its tied to, place that ID instead of generating a new node
                     node = store.getNode(UUID.fromString(id));
                     if(node == null) {
                         player.sendSystemMessage(Component.literal("Node ID is invalid").withColor(Color.RED.getRGB()));
                         return;
                     }
                 } else {
+                    // Attempt to create a node
                     try {
                         node = store.createNode(player, Config.DefaultStructureTemplate);
                     } catch(Exception e) {
@@ -197,7 +164,8 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+    @NotNull
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (player == null || player.isCrouching())
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         if (player instanceof FakePlayer)
@@ -206,27 +174,27 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
             return ItemInteractionResult.SUCCESS;
 
         ServerPlayer sp = (ServerPlayer) player;
-        boolean isUsingTool = stack.is(RegistryItems.POCKET_TOOL);
 
         if(level.dimension() == RegistryDims.STORAGE_DIM) {
             // Inside dimension, always just return home
             StorageNode.restorePlayer(sp);
             level.playSound(null, pos, SoundEvents.CHEST_CLOSE, SoundSource.BLOCKS, 1.0f, 1.0f);
             return ItemInteractionResult.SUCCESS;
-        } else {
-            // Outside dimension, check owner and teleport to
-            PocketChestBlockEntity ent = getBlockEntity(level, pos);
-            if(ent != null) {
-                ent.check();
-                RegionStorage store = RegionStorage.get((ServerLevel) level);
-                StorageNode node = store.getNode(ent.getNodeId());
-                if(isUsingTool) {
-                    StorageNode.inspectNode(sp, node);
-                } else if(node != null) {
-                    Pocket_storage.LOGGER.debug("node {}. teleporting", node.getId());
-                    node.teleportPlayerTo(sp);
-                    level.playSound(null, pos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.0f);
-                }
+        }
+
+        boolean isUsingTool = stack.is(RegistryItems.POCKET_TOOL);
+        // Outside dimension, check owner and teleport to
+        PocketChestBlockEntity ent = getBlockEntity(level, pos);
+        if(ent != null) {
+            ent.check();
+            RegionStorage store = RegionStorage.get((ServerLevel) level);
+            StorageNode node = store.getNode(ent.getNodeId());
+            if(isUsingTool) {
+                StorageNode.inspectNode(sp, node);
+            } else if(node != null) {
+                Pocket_storage.LOGGER.debug("node {}. teleporting", node.getId());
+                node.teleportPlayerTo(sp);
+                level.playSound(null, pos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.0f);
             }
         }
         return ItemInteractionResult.SUCCESS;
@@ -234,14 +202,14 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
 
 
     @Override
-    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-        ItemStack item = new ItemStack(this.asItem(), 1);
-
-        return List.of(item);
+    @NotNull
+    protected List<ItemStack> getDrops(@NotNull BlockState state, @NotNull LootParams.Builder params) {
+        // We handle dropping manually - drop nothing
+        return List.of();
     }
 
     @Override
-    public @Nullable BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
+    public @Nullable BlockEntity newBlockEntity(@NotNull BlockPos blockPos, @NotNull BlockState blockState) {
         return new PocketChestBlockEntity(blockPos, blockState);
     }
 
@@ -255,7 +223,7 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
     }
 
     @Override
-    public void tick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom) {
+    public void tick(@NotNull BlockState pState, @NotNull ServerLevel pLevel, @NotNull BlockPos pPos, @NotNull RandomSource pRandom) {
         // Ignore our own dim - it's just an exit
         if(pLevel.dimension() == RegistryDims.STORAGE_DIM) return;
 

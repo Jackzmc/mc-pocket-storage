@@ -113,7 +113,13 @@ public class CmdRegister {
 
     private static int giveChest(CommandSourceStack source, @Nullable ServerPlayer player, @Nullable UUID nodeId) {
         if(player != null) {
-            ItemStack item = PocketChestBlock.getChestItem(nodeId);
+            RegionStorage store = RegionStorage.get(source.getLevel());
+            StorageNode node = store.getNode(nodeId);
+            if(node == null) {
+                source.sendFailure(Component.literal("Node ID is not valid").withColor(Color.RED.getRGB()));
+                return -1;
+            }
+            ItemStack item = PocketChestBlock.getChestItem(node);
             player.getInventory().add(item);
             return Command.SINGLE_SUCCESS;
         } else {

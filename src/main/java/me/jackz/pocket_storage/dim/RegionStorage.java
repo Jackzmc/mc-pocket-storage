@@ -175,8 +175,8 @@ public class RegionStorage extends SavedData {
      */
     @Nullable
     public StorageNode getActiveNode(ServerPlayer player) {
-        if(player.hasData(RegistryAttachmentTypes.NODE_ID)) {
-            UUID id = player.getData(RegistryAttachmentTypes.NODE_ID);
+        if(player.hasData(RegistryAttachmentTypes.ACTIVE_NODE_ID)) {
+            UUID id = player.getData(RegistryAttachmentTypes.ACTIVE_NODE_ID);
             return getNode(id);
         }
         if(player.level().dimension() == RegistryDims.STORAGE_DIM) {
