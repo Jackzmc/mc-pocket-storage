@@ -5,7 +5,9 @@ import me.jackz.pocket_storage.dim.StorageNode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -30,7 +32,13 @@ public class PocketChestBlockEntity extends BlockEntity {
     public void check() {
         if(nodeId == null) {
             Pocket_storage.LOGGER.error("Removing invalid pocket chest at {} in {} that has no node", this.worldPosition, this.level);
-            if(this.level != null) this.level.destroyBlock(worldPosition, true);
+            if(this.level != null) {
+                this.level.destroyBlock(worldPosition, true);
+                if(this.level instanceof ServerLevel lvl) {
+                    ItemStack clone = PocketChestBlock.getChestItem(null);
+                    PocketChestBlock.popResource(level, worldPosition, clone);
+                }
+            }
         }
     }
 
