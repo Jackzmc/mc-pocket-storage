@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: debian-latest
+    steps:
+      - name: Checkout sources
+        uses: https://git.jackz.me/actions/checkout@v6
+      - name: Setup Java
+        uses: https://git.jackz.me/actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 21
+      - name: Setup Gradle
+        uses: https://git.jackz.me/gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Build with Gradle
+        run: ./gradlew build
+      - name: Upload artifacts
+        uses: https://git.jackz.me/actions/upload-artifact@v4
+        with:
+          name: build
+          path: build/libs
