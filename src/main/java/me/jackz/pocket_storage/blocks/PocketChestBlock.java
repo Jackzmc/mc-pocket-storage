@@ -194,7 +194,8 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
             } else if(node != null) {
                 Pocket_storage.LOGGER.debug("node {}. teleporting", node.getId());
                 node.teleportPlayerTo(sp);
-                level.playSound(null, pos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.0f);
+                level.playSound(sp, pos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.0f);
+                sp.playSound(SoundEvents.CHEST_OPEN, 1.0f, 1.0f);
             }
         }
         return ItemInteractionResult.SUCCESS;

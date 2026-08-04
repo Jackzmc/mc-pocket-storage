@@ -17,12 +17,12 @@ public class TextUtil {
             .withStyle(style -> style
                     .withColor(ChatFormatting.GRAY)
                     .withClickEvent(new ClickEvent(
-                            ClickEvent.Action.COPY_TO_CLIPBOARD,
-                            value
+                        ClickEvent.Action.COPY_TO_CLIPBOARD,
+                        value
                     ))
                     .withHoverEvent(new HoverEvent(
-                            HoverEvent.Action.SHOW_TEXT,
-                            Component.literal("Click to copy")
+                        HoverEvent.Action.SHOW_TEXT,
+                        Component.literal("Click to copy to clipboard")
                     ))
             );
         return Component.literal(key)

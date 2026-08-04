@@ -1,5 +1,6 @@
 package me.jackz.pocket_storage.dim;
 
+import com.mojang.authlib.GameProfile;
 import me.jackz.pocket_storage.Pocket_storage;
 import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
 import me.jackz.pocket_storage.registry.RegistryDims;
@@ -21,9 +22,11 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlac
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
+import java.util.Optional;
 import java.util.UUID;
 
 import static me.jackz.pocket_storage.Pocket_storage.LOGGER;
@@ -42,8 +45,10 @@ public class StorageNode {
 
     public static void inspectNode(CommandSourceStack source, @Nullable StorageNode node) {
         if(node != null) {
+            Optional<GameProfile> profile = node.getOwnerProfile();
             TextUtil.sendKeyValueComponent(source, "Node ID", node.getId().toString());
             TextUtil.sendKeyValueComponent(source, "Owner UUID", node.getOwnerId().toString());
+            profile.ifPresent(gameProfile -> TextUtil.sendKeyValueComponent(source, "Owner", gameProfile.getName()));
             TextUtil.sendKeyValueComponent(source, "Center Pos", node.getBlockCenter().toShortString());
             TextUtil.sendKeyValueComponent(source, "Corner Pos", node.getCorner().toShortString());
             TextUtil.sendKeyValueComponent(source, "Size", node.getSizeString());
@@ -137,8 +142,6 @@ public class StorageNode {
             // Ensure we never restore back to storage world
             attach.dim = ServerLevel.OVERWORLD;
         }
-        Pocket_storage.LOGGER.debug("dim set to {}", attach.dim);
-        Pocket_storage.LOGGER.debug("stored last loc {}, ang {}", attach.lastPos, attach.lastAng);
         player.setData(RegistryAttachmentTypes.LAST_LOCATION, attach);
         player.setData(RegistryAttachmentTypes.ACTIVE_NODE_ID, this.getId());
 
@@ -192,6 +195,12 @@ public class StorageNode {
 
     public UUID getOwnerId() {
         return data.ownerUUID;
+    }
+
+    public Optional<GameProfile> getOwnerProfile() {
+        return ServerLifecycleHooks.getCurrentServer()
+                .getProfileCache()
+                .get(data.ownerUUID);
     }
 
     public Vec3i getSize() {

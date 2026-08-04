@@ -13,11 +13,11 @@ public class Structure {
      * Builds a shell starting from corner, extending +X +Y +Z according to size.
      * @param level world to build in
      * @param corner starting corner
-     * @param sizeX
-     * @param sizeY
-     * @param sizeZ
+     * @param sizeX number of blocks in +X
+     * @param sizeY number of blocks in +Y
+     * @param sizeZ number of blocks in +Z
      * @param wallBlock the block to make wall of
-     * @param insideBlock the block to fill inside with, or null for do not (re)place any
+     * @param insideBlock the block to fill inside with, or null to not replace any blocks inside
      */
     public static void buildBox(ServerLevel level, BlockPos corner, int sizeX, int sizeY, int sizeZ, BlockState wallBlock, @Nullable BlockState insideBlock) {
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();

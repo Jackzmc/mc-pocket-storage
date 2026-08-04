@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.portal.DimensionTransition;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.attachment.IAttachmentHolder;
@@ -23,13 +24,15 @@ import net.neoforged.neoforge.attachment.IAttachmentSerializer;
 public class LevelLocationAttachment {
     public ResourceKey<Level> dim;
     public BlockPos lastPos;          // BlockPos.asLong()
-    public Vec3 lastAng;
+    public float rotX;
+    public float rotY;
 
     public static LevelLocationAttachment fromPlayerPosition(ServerPlayer player) {
         LevelLocationAttachment att = new LevelLocationAttachment();
         att.dim = player.level().dimension();
         att.lastPos = player.getBlockPosBelowThatAffectsMyMovement().above();
-        att.lastAng = player.getLookAngle();
+        att.rotX = player.getXRot();
+        att.rotY = player.getYRot();
         return att;
     }
 
@@ -43,7 +46,7 @@ public class LevelLocationAttachment {
                 Pocket_storage.LOGGER.warn("Attempted to restore player to invalid dimension ({})", dim);
                 return false;
             }
-            player.changeDimension(StorageDimTransition.to(targetLvl, pos, lastAng));
+            player.changeDimension(StorageDimTransition.to(targetLvl, pos, new Vec2(rotX, rotY)));
             Pocket_storage.LOGGER.debug("teleporting to {} in {}", pos, targetLvl);
         } else {
             Pocket_storage.LOGGER.debug("player in same dimension - just teleporting. {}", pos);
@@ -59,7 +62,8 @@ public class LevelLocationAttachment {
             LevelLocationAttachment att = new LevelLocationAttachment();
             att.dim = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(tag.getString("dim")));
             att.lastPos = BlockPos.containing(NBTUtil.getVec3(tag, "pos"));
-            att.lastAng = NBTUtil.getVec3(tag, "ang");
+            att.rotX = tag.getFloat("rotX");
+            att.rotY = tag.getFloat( "rotY");
             return att;
         }
 
@@ -72,8 +76,8 @@ public class LevelLocationAttachment {
             CompoundTag tag = new CompoundTag();
             tag.putString("dim", att.dim.location().toString());
             NBTUtil.putVec3(tag, "pos", att.lastPos.getCenter());
-            NBTUtil.putVec3(tag, "ang", att.lastAng);
-            Pocket_storage.LOGGER.debug("saving pos={} ang={}", att.lastPos, att.lastAng);
+            tag.putFloat("rotX", att.rotX);
+            tag.putFloat("rotY", att.rotY);
             return tag;
         }
     }
