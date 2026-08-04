@@ -1,5 +1,6 @@
 package me.jackz.pocket_storage.registry;
 
+import me.jackz.pocket_storage.items.PocketToolItem;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -20,7 +21,9 @@ public class RegistryItems {
 
     // Creates a new food item with the id "pocket_storage:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> POCKET_TOOL = REGISTER
-            .registerSimpleItem("pocket_tool", new Item.Properties().stacksTo(1));
+            .registerItem("pocket_tool", p -> new PocketToolItem(p
+                    .stacksTo(1)
+            ));
 
     public static void register(IEventBus bus) {
         REGISTER.register(bus);

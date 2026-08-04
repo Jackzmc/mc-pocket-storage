@@ -27,7 +27,7 @@ public class PocketChestBlockEntity extends BlockEntity {
         return nodeId;
     }
 
-    protected void check() {
+    public void check() {
         if(nodeId == null) {
             Pocket_storage.LOGGER.error("Removing invalid pocket chest at {} in {} that has no node", this.worldPosition, this.level);
             if(this.level != null) this.level.destroyBlock(worldPosition, true);
