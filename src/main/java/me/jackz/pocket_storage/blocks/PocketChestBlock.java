@@ -1,5 +1,6 @@
 package me.jackz.pocket_storage.blocks;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.MapCodec;
 import me.jackz.pocket_storage.Config;
 import me.jackz.pocket_storage.Pocket_storage;
@@ -22,6 +23,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -49,7 +51,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static net.minecraft.core.Direction.NORTH;
@@ -101,13 +105,22 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
         ItemStack item = new ItemStack(RegistryItems.POCKET_CHEST_ITEM.asItem());
         if (node != null) {
             item.set(RegistryComponents.NODE_ID, node.getId().toString());
+            // Set lore
+            Optional<GameProfile> profile = node.getOwnerProfile();
             Style style = Style.EMPTY
-                    .withItalic(false)
-                    .withColor(ChatFormatting.GRAY);
-            ItemLore lore = new ItemLore(List.of(
-                Component.literal(node.getId().toString()).withStyle(style),
-                Component.literal(node.getSizeString()).withStyle(style)
+                .withItalic(false)
+                .withColor(ChatFormatting.GRAY);
+
+            List<Component> loreItems = new ArrayList<>();
+            profile.ifPresent(gameProfile -> loreItems.add(
+                Component.literal(gameProfile.getName())
+                    .withStyle(style.withColor(ChatFormatting.GOLD))
+                    .append("'s chest")
             ));
+            loreItems.add(Component.literal(node.getId().toString()).withStyle(style));
+            loreItems.add(Component.literal(node.getSizeString()).withStyle(style));
+
+            ItemLore lore = new ItemLore(loreItems);
             item.set(DataComponents.LORE, lore);
         }
         return item;
