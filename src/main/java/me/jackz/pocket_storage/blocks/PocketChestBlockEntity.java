@@ -30,15 +30,12 @@ public class PocketChestBlockEntity extends BlockEntity {
     }
 
     public void check() {
+        if(this.level == null || this.level.isClientSide) return;
         if(nodeId == null) {
             Pocket_storage.LOGGER.error("Removing invalid pocket chest at {} in {} that has no node", this.worldPosition, this.level);
-            if(this.level != null) {
-                this.level.destroyBlock(worldPosition, true);
-                if(this.level instanceof ServerLevel lvl) {
-                    ItemStack clone = PocketChestBlock.getChestItem(null);
-                    PocketChestBlock.popResource(level, worldPosition, clone);
-                }
-            }
+            this.level.destroyBlock(worldPosition, true);
+            ItemStack clone = PocketChestBlock.getChestItem(null);
+            PocketChestBlock.popResource(level, worldPosition, clone);
         }
     }
 
