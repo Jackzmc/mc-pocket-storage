@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  tags:
+    - 'v*'
 
 jobs:
   build:
@@ -27,3 +29,21 @@ jobs:
         with:
           name: build
           path: build/libs
+  release:
+    # Only release on tags
+    if: startsWith(forgejo.ref, 'refs/tags/v')
+    runs-on: debian-latest
+    needs: build
+    steps:
+      - name: Pull artifact
+        uses: https://git.jackz.me/actions/download-artifact@v4
+        with:
+          name: build
+          merge-multiple: true
+      - name: Create release
+        uses: https://git.jackz.me/actions/forgejo-release@v2.7.3
+        with:
+          direction: upload
+          release-dir: .
+          prerelease: true
+          override: true
