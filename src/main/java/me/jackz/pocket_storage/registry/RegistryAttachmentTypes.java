@@ -6,6 +6,7 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -23,6 +24,14 @@ public class RegistryAttachmentTypes {
             () -> AttachmentType.builder(LevelLocationAttachment::new)
                     .serialize(new LevelLocationAttachment.LocationSerializer())
                     .build());
+    /**
+     * Store the last location inside the pocket dimension. Not saved
+     */
+    public static final Supplier<AttachmentType<LevelLocationAttachment>> LAST_LOCATION_INSIDE = REGISTER.register(
+            "last_location_inside",
+            () -> AttachmentType.builder(LevelLocationAttachment::new)
+                    .build());
+
 
     public static final Supplier<AttachmentType<UUID>> NODE_ID = REGISTER.register(
             "node_id",

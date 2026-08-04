@@ -19,6 +19,7 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.attachment.IAttachmentHolder;
 import net.neoforged.neoforge.attachment.IAttachmentSerializer;
 
+// TODO: change this to store list of locations, and method to check for best safe one?
 public class LevelLocationAttachment {
     public ResourceKey<Level> dim;
     public BlockPos lastPos;          // BlockPos.asLong()

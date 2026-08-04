@@ -16,17 +16,18 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.fml.ModList;
 import org.apache.logging.log4j.core.jmx.Server;
 import org.jetbrains.annotations.Nullable;
 
@@ -214,11 +215,30 @@ public class StorageNode {
         BlockState wallBlock = Blocks.BEDROCK.defaultBlockState();
         buildBox(level, data.cornerPos, size.getX() + 2, size.getY() + 2, size.getZ() + 2, wallBlock, null);
         LOGGER.debug("bedbox corner={} size={}", data.cornerPos, size.offset(1, 1, 1));
-//        BlockState lightBlock = Blocks.TORCH.defaultBlockState();
-//        level.setBlock(btmCenter.east(), lightBlock, Block.UPDATE_NONE);
-//        level.setBlock(btmCenter.west(), lightBlock, Block.UPDATE_NONE);
-//        level.setBlock(btmCenter.north(), lightBlock, Block.UPDATE_NONE);
-//        level.setBlock(btmCenter.south(), lightBlock, Block.UPDATE_NONE);
+        String version = ModList.get().getModContainerById(MODID)
+                .map(c -> c.getModInfo().getVersion().toString())
+                .orElse("unknown");
+
+        placeSign(level, data.cornerPos.north(), new Component[] {
+            Component.literal(data.id.toString().substring(0, 13)),
+            Component.literal(data.ownerUUID.toString().substring(0, 13)),
+            Component.literal(data.size.toShortString()),
+            Component.literal(version)
+        });
+    }
+
+    private void placeSign(ServerLevel level, BlockPos pos, Component[] lines) {
+        BlockState state = Blocks.OAK_WALL_SIGN.defaultBlockState()
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH);
+        level.setBlock(pos, state, Block.UPDATE_CLIENTS);
+        level.getBlockEntity(pos, BlockEntityType.SIGN).ifPresent(sign -> {
+            sign.updateText(text -> {
+                for(int i = 0; i < lines.length ; i++) {
+                    text = text.setMessage(i, lines[i]);
+                }
+                return text;
+            }, true);
+        });
     }
 
 
