@@ -97,17 +97,18 @@ public class CmdRegister {
             .then(literal("new")
                 .executes(ctx -> giveChest(ctx.getSource(), ctx.getSource().getPlayer(), null))
             )
-            .then(Commands.argument("id", uuid())
-                .suggests(NODE_IDS)
-                .executes(ctx -> giveChest(ctx.getSource(), ctx.getSource().getPlayer(), getUuid(ctx, "id"))))
+            .then(literal("id")
+                .then(Commands.argument("id", uuid())
+                        .suggests(NODE_IDS)
+                        .executes(ctx -> giveChest(ctx.getSource(), ctx.getSource().getPlayer(), getUuid(ctx, "id"))))
                 .then(Commands.argument("player", string())
-                    .suggests(PLAYER_NAMES)
-                    .executes(ctx -> {
-                        MinecraftServer server = ctx.getSource().getLevel().getServer();
-                        ServerPlayer player = server.getPlayerList().getPlayerByName(getString(ctx, "player"));
-                        return giveChest(ctx.getSource(), player, getUuid(ctx, "id"));
-                    })
-                )
+                        .suggests(PLAYER_NAMES)
+                        .executes(ctx -> {
+                            MinecraftServer server = ctx.getSource().getLevel().getServer();
+                            ServerPlayer player = server.getPlayerList().getPlayerByName(getString(ctx, "player"));
+                            return giveChest(ctx.getSource(), player, getUuid(ctx, "id"));
+                        })
+                ))
         );
     }
 
@@ -115,10 +116,6 @@ public class CmdRegister {
         if(player != null) {
             RegionStorage store = RegionStorage.get(source.getLevel());
             StorageNode node = store.getNode(nodeId);
-            if(node == null) {
-                source.sendFailure(Component.literal("Node ID is not valid").withColor(Color.RED.getRGB()));
-                return -1;
-            }
             ItemStack item = PocketChestBlock.getChestItem(node);
             player.getInventory().add(item);
             return Command.SINGLE_SUCCESS;
