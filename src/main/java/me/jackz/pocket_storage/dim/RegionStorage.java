@@ -185,6 +185,8 @@ public class RegionStorage extends SavedData {
             for(Map.Entry<UUID, StorageNodeData> entry : nodesDataMap.entrySet()) {
                 StorageNode node = StorageNode.fromData(entry.getValue());
                 if(node.isVecInNode(pos)) {
+                    // Mark player's node to the found node
+                    player.setData(RegistryAttachmentTypes.ACTIVE_NODE_ID, node.getId());
                     return node;
                 }
             }
