@@ -6,7 +6,7 @@
     "gameplay/surface_slime_spawn_chance": false
   },
   "ambient_light": 1.0,
-  "bed_works": false,
+  "bed_works": true,
   "coordinate_scale": 1.0,
   "effects": "minecraft:overworld",
   "has_ceiling": true,
