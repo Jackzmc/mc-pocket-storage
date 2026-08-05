@@ -51,7 +51,7 @@ public class StorageNode {
             profile.ifPresent(gameProfile -> TextUtil.sendKeyValueComponent(source, "Owner", gameProfile.getName()));
             TextUtil.sendKeyValueComponent(source, "Center Pos", node.getBlockCenter().toShortString());
             TextUtil.sendKeyValueComponent(source, "Corner Pos", node.getCorner().toShortString());
-            TextUtil.sendKeyValueComponent(source, "Size", node.getSizeString());
+            TextUtil.sendKeyValueComponent(source, "Size", node.getInnerSizeString());
         } else {
             source.sendSystemMessage(Component.literal("No node was found").withColor(Color.RED.getRGB()));
         }
@@ -110,29 +110,42 @@ public class StorageNode {
      * Returns the opposite corner of box, with the highest Y height
      */
     public BlockPos getOppositeCorner() {
-        Vec3i size = getSize();
+        Vec3i size = getOuterSize();
         return data.cornerPos.offset(size.getX(), size.getY(), size.getZ());
     }
 
 
-    public BlockPos getBlockCenter() {
-        return getBlockBottomCenter().relative(Direction.UP, getSize().getY() / 2);
+
+    public Vec3 getBottomCenter() {
+        // Offset size +1 to get outer shell size
+        Vec3i size = getInnerSize().offset(1, 1, 1);
+        float x = (float)data.cornerPos.getX() + ((float)size.getX() / 2f);
+        float y = data.cornerPos.getY();
+        float z = (float) data.cornerPos.getZ() + (size.getZ() / 2f);
+        // Add +0.5f to get center of block
+        return new Vec3(x + 0.5f, y + 0.5f, z + 0.5f);
     }
 
     public Vec3 getCenter() {
-        Vec3i size = getSize();
-        float x = (float)data.cornerPos.getX() + ((float)size.getX() / 2f);
-        float y = data.cornerPos.getY();
-        float z = data.cornerPos.getZ() + (size.getZ() / 2f);
-        return new Vec3(x, y, z);
+        return getBottomCenter().relative(Direction.UP, (float) getInnerSize().getY() / 2f);
+    }
+
+    public BlockPos getBlockCenter() {
+        Vec3 center = getCenter();
+        return new BlockPos(
+            (int) center.x,
+            (int) center.y,
+            (int) center.z
+        );
     }
 
     public BlockPos getBlockBottomCenter() {
-        Vec3i size = getSize();
-        int x = data.cornerPos.getX() + (size.getX() / 2);
-        int y = data.cornerPos.getY();
-        int z = data.cornerPos.getZ() + (size.getZ() / 2);
-        return new BlockPos(x, y, z);
+        Vec3 center = getBottomCenter();
+        return new BlockPos(
+            (int) center.x,
+            (int) center.y,
+            (int) center.z
+        );
     }
 
     public void teleportPlayerTo(ServerPlayer player) {
@@ -156,7 +169,7 @@ public class StorageNode {
         BlockPos.MutableBlockPos cursor = getBlockBottomCenter().mutable();
         if(level == null) return cursor.getCenter();
         int yMin = data.cornerPos.getY();
-        int yMax = yMin + getSize().getY();
+        int yMax = yMin + getInnerSize().getY();
         for (int y = yMax - 1; y > yMin; y--) {
             cursor.setY(y);
             if(!level.isInWorldBounds(cursor)) continue;
@@ -203,10 +216,22 @@ public class StorageNode {
                 .get(data.ownerUUID);
     }
 
-    public Vec3i getSize() {
+    /**
+     * Get size of node's internal, excluding bedrock walls
+     */
+    public Vec3i getInnerSize() {
         return data.size;
     }
-    public String getSizeString() {
+
+    /**
+     * Get size of node, including its external bedrock walls
+     */
+    public Vec3i getOuterSize() {
+        return data.size.offset(1, 1, 1);
+    }
+
+
+    public String getInnerSizeString() {
         return String.format("%dx%dx%d", data.size.getX(), data.size.getY(),  data.size.getZ());
     }
 
@@ -254,7 +279,6 @@ public class StorageNode {
                 .setRotation(Rotation.NONE)
                 .setMirror(Mirror.NONE)
                 .setIgnoreEntities(true);
-//                .setKnownShape(true);
 
         BlockPos innerOrigin = new BlockPos(origin.getX() + 1, origin.getY() + 1, origin.getZ() + 1);
         LOGGER.debug("innerOrigin={} SIZE={}", innerOrigin, size);

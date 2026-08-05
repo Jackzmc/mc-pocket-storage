@@ -23,7 +23,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -46,7 +45,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.util.FakePlayer;
-import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -118,7 +116,7 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
                     .append("'s chest")
             ));
             loreItems.add(Component.literal(node.getId().toString()).withStyle(style));
-            loreItems.add(Component.literal(node.getSizeString()).withStyle(style));
+            loreItems.add(Component.literal(node.getInnerSizeString()).withStyle(style));
 
             ItemLore lore = new ItemLore(loreItems);
             item.set(DataComponents.LORE, lore);
