@@ -1,5 +1,6 @@
 package me.jackz.pocket_storage.events;
 
+import me.jackz.pocket_storage.Pocket_storage;
 import me.jackz.pocket_storage.dim.RegionStorage;
 import me.jackz.pocket_storage.dim.StorageNode;
 import me.jackz.pocket_storage.registry.RegistryBlocks;
@@ -14,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.MobSpawnEvent;
@@ -74,11 +76,11 @@ public class StorageWorldEvents {
             if(heldItem.getItem() == RegistryItems.POCKET_TOOL.get()) {
                 voidLevel.getServer().execute(() -> StorageNode.restorePlayer(player));
             } else if(player.onGround() && player.getDeltaMovement().lengthSqr() <= 0.01) {
-                BlockPos pos = player.blockPosition();
-                // TODO: impl check for specific center region
+                Vec3 pos = player.position();
                 StorageNode node = store.getActiveNode(player);
                 if (node != null) {
-                    if (pos.distSqr(node.getBlockBottomCenter()) < 8f) {
+                    Vec3 nodeCenter = node.getBottomCenter();
+                    if (pos.distanceToSqr(nodeCenter) <= 4f) {
                         voidLevel.getServer().execute(() -> StorageNode.restorePlayer(player));
                     }
                 }
