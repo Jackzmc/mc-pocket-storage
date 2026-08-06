@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import me.jackz.pocket_storage.Pocket_storage;
 import me.jackz.pocket_storage.registry.RegistryAttachmentTypes;
 import me.jackz.pocket_storage.registry.RegistryDims;
+import me.jackz.pocket_storage.util.CollisionUtil;
 import me.jackz.pocket_storage.util.LevelLocationAttachment;
 import me.jackz.pocket_storage.util.TextUtil;
 import net.minecraft.commands.CommandSourceStack;
@@ -14,12 +15,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
@@ -166,20 +169,19 @@ public class StorageNode {
 
     private Vec3 findSafeSpawn(ServerPlayer player) {
         ServerLevel level = player.getServer().getLevel(RegistryDims.STORAGE_DIM);
-        BlockPos.MutableBlockPos cursor = getBlockBottomCenter().mutable();
-        if(level == null) return cursor.getCenter();
-        int yMin = data.cornerPos.getY();
-        int yMax = yMin + getInnerSize().getY();
-        for (int y = yMax - 1; y > yMin; y--) {
-            cursor.setY(y);
-            if(!level.isInWorldBounds(cursor)) continue;
-            Vec3 feetPos = new Vec3(cursor.getX() + 0.5, y, cursor.getZ() + 0.5);
-            // Check there's something to stand on below
-            if (!level.getBlockState(cursor).getCollisionShape(level, cursor).isEmpty()) {
-                return feetPos.add(0, 1, 0);
-            }
+        BlockPos start = getBlockBottomCenter();
+
+        Vec3 spawnLoc = CollisionUtil.findSafePosition(level, start, getOuterSize().getY());
+        if(spawnLoc == null) {
+            LOGGER.warn("failed to find a safe location, clearing space");
+            // If we fail to find any safe location - force it
+            // Break the 2 blocks above position
+            // We can assume that the ground is solid bedrock
+            BlockPos btmBlock = getBlockBottomCenter().above(); // Inner structure block
+            CollisionUtil.clearSpotAbove(level, btmBlock);
+            spawnLoc = btmBlock.above().getBottomCenter(); // Spawn on top of btmBlock
         }
-        return new Vec3(cursor.getX() + 0.5, yMin + 1, cursor.getZ() + 0.5);
+        return spawnLoc;
     }
 
     public static boolean restorePlayer(ServerPlayer player) {
