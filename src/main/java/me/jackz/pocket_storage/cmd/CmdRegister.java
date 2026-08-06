@@ -7,6 +7,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import me.jackz.pocket_storage.Config;
 import me.jackz.pocket_storage.blocks.PocketChestBlock;
 import me.jackz.pocket_storage.dim.RegionStorage;
+import me.jackz.pocket_storage.dim.StorageDimTransition;
 import me.jackz.pocket_storage.dim.StorageNode;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -17,6 +18,7 @@ import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -58,6 +60,9 @@ public class CmdRegister {
 
     private static LiteralArgumentBuilder<CommandSourceStack> build() {
         return literal("pocket")
+        .then(literal("dim")
+            .then(literal("enter")
+                .executes(ctx -> enterDim(ctx.getSource()))))
         .then(literal("nodes")
             .then(literal("list")
                 .executes(ctx -> listNodes(ctx.getSource()))
@@ -110,6 +115,16 @@ public class CmdRegister {
                         })
                 ))
         );
+    }
+
+    private static int enterDim(CommandSourceStack source) {
+        ServerPlayer player = source.getPlayer();
+        if(player == null) {
+            source.sendFailure(Component.literal("Must be a player").withColor(Color.RED.getRGB()));
+            return -1;
+        }
+        StorageDimTransition.enterStorageDimension(player, new Vec3(0, 64, 0));
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int giveChest(CommandSourceStack source, @Nullable ServerPlayer player, @Nullable UUID nodeId) {
