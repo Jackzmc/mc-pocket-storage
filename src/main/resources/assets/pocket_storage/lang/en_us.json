@@ -1,5 +1,7 @@
 {
   "itemGroup.pocket_storage": "Pocket Storage",
   "block.pocket_storage.pocket_chest": "Pocket Chest",
-  "item.pocket_storage.pocket_tool": "Pocket Tool"
+  "item.pocket_storage.pocket_tool": "Pocket Tool",
+  "item.pocket_storage.pocket_tool_owner": "%s's chest",
+  "node.exit-hint": "Sneak near the bottom center to exit"
 }

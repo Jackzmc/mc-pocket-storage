@@ -111,9 +111,8 @@ public class PocketChestBlock extends HorizontalDirectionalBlock implements Enti
 
             List<Component> loreItems = new ArrayList<>();
             profile.ifPresent(gameProfile -> loreItems.add(
-                Component.literal(gameProfile.getName())
+                Component.translatable("item.pocket_storage.pocket_tool_owner",  gameProfile.getName())
                     .withStyle(style.withColor(ChatFormatting.GOLD))
-                    .append("'s chest")
             ));
             loreItems.add(Component.literal(node.getId().toString()).withStyle(style));
             loreItems.add(Component.literal(node.getInnerSizeString()).withStyle(style));

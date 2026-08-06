@@ -164,7 +164,7 @@ public class StorageNode {
         Vec3 pos = findSafeSpawn(player);
         StorageDimTransition.enterStorageDimension(player, pos);
 
-        player.sendSystemMessage(Component.literal("Sneak near the center to exit"));
+        player.sendSystemMessage(Component.translatable("node.exit-hint"));
     }
 
     private Vec3 findSafeSpawn(ServerPlayer player) {
